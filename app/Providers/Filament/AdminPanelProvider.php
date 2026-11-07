@@ -171,29 +171,109 @@ class AdminPanelProvider extends PanelProvider
                 PanelsRenderHook::BODY_END,
                 fn (): HtmlString => new HtmlString(<<<'HTML'
                     <script>
-                        document.addEventListener('click', (event) => {
-                            const link = event.target.closest('a[href]');
-                            if (!link) return;
+                        (() => {
+                            const path = window.location.pathname;
+                            if (!path.startsWith('/admin/')) return;
 
-                            const target = new URL(link.href, window.location.href);
-                            if (target.origin !== window.location.origin) return;
+                            const draftKey = `filament-form-draft:${path}`;
+                            const fieldSelector = '[wire\\:model], [wire\\:model\\.live]';
+                            const fields = () => Array.from(document.querySelectorAll(fieldSelector))
+                                .filter((field) => field.matches('input, select, textarea') && field.type !== 'file');
+                            const fieldKey = (field) => field.getAttribute('wire:model') || field.getAttribute('wire:model.live');
 
-                            if (/^\/admin\/.+\/print\/?$/.test(target.pathname)) {
-                                event.preventDefault();
-                                event.stopImmediatePropagation();
-                                window.open(target.href, 'kjm-print-preview', 'popup=yes,width=1100,height=850,scrollbars=yes,resizable=yes');
-                                return;
+                            const saveDraft = () => {
+                                const draft = {};
+                                fields().forEach((field) => {
+                                    const key = fieldKey(field);
+                                    if (!key) return;
+                                    draft[key] = field.type === 'checkbox' || field.type === 'radio'
+                                        ? (field.checked ? field.value : null)
+                                        : field.value;
+                                });
+                                try { localStorage.setItem(draftKey, JSON.stringify(draft)); } catch (_) {}
+                            };
+
+                            const restoreDraft = () => {
+                                let draft;
+                                try { draft = JSON.parse(localStorage.getItem(draftKey) || 'null'); } catch (_) { return; }
+                                if (!draft) return;
+                                fields().forEach((field) => {
+                                    const key = fieldKey(field);
+                                    if (!key || !(key in draft)) return;
+                                    if (field.type === 'checkbox' || field.type === 'radio') {
+                                        field.checked = draft[key] !== null && field.value === draft[key];
+                                    } else {
+                                        field.value = draft[key] ?? '';
+                                    }
+                                    field.dispatchEvent(new Event('input', { bubbles: true }));
+                                    field.dispatchEvent(new Event('change', { bubbles: true }));
+                                });
+                            };
+
+                            let saveTimer;
+                            document.addEventListener('input', (event) => {
+                                if (event.target.matches(fieldSelector)) {
+                                    clearTimeout(saveTimer);
+                                    saveTimer = setTimeout(saveDraft, 200);
+                                }
+                            }, true);
+                            document.addEventListener('change', (event) => {
+                                if (event.target.matches(fieldSelector)) saveDraft();
+                            }, true);
+
+                            let livewireHookRegistered = false;
+                            const clearDraftAfterSave = () => {
+                                if (livewireHookRegistered) return;
+                                if (!window.Livewire?.hook) return;
+                                livewireHookRegistered = true;
+                                window.Livewire.hook('commit', ({ succeed }) => {
+                                    succeed(({ effects }) => {
+                                        if (effects?.redirect) {
+                                            try { localStorage.removeItem(draftKey); } catch (_) {}
+                                        }
+                                    });
+                                });
+                            };
+
+                            const addResetButton = () => {
+                                if (!/\/create\/?$/.test(path) || document.querySelector('[data-reset-form-draft]')) return;
+                                const form = document.querySelector('form[wire\\:submit]');
+                                if (!form) return;
+                                const button = document.createElement('button');
+                                button.type = 'button';
+                                button.dataset.resetFormDraft = 'true';
+                                button.className = 'fi-btn fi-btn-size-md fi-btn-color-gray fi-outlined';
+                                button.textContent = 'Reset Isi Data';
+                                button.addEventListener('click', () => {
+                                    try { localStorage.removeItem(draftKey); } catch (_) {}
+                                    window.location.reload();
+                                });
+                                const actions = form.querySelector('.fi-form-actions') || form;
+                                actions.append(button);
+                            };
+
+                            document.addEventListener('DOMContentLoaded', () => {
+                                restoreDraft();
+                                addResetButton();
+                                clearDraftAfterSave();
+                            });
+                            document.addEventListener('livewire:init', clearDraftAfterSave, { once: true });
+                            if (document.readyState !== 'loading') {
+                                restoreDraft();
+                                addResetButton();
+                                clearDraftAfterSave();
                             }
-
-                            const isCreateForm = /^\/admin\/.+\/create\/?$/.test(window.location.pathname);
-                            const clickedSidebarLink = link.closest('aside, [class*="sidebar"]');
-
-                            if (isCreateForm && clickedSidebarLink && target.pathname.startsWith('/admin/')) {
-                                event.preventDefault();
-                                event.stopImmediatePropagation();
-                                window.open(target.href, '_blank', 'noopener');
-                            }
-                        }, true);
+                            document.addEventListener('click', (event) => {
+                                const link = event.target.closest('a[href]');
+                                if (!link) return;
+                                const target = new URL(link.href, window.location.href);
+                                if (target.origin === window.location.origin && /^\/admin\/.+\/print\/?$/.test(target.pathname)) {
+                                    event.preventDefault();
+                                    event.stopImmediatePropagation();
+                                    window.open(target.href, 'kjm-print-preview', 'popup=yes,width=1100,height=850,scrollbars=yes,resizable=yes');
+                                }
+                            }, true);
+                        })();
                     </script>
                     HTML),
             )
