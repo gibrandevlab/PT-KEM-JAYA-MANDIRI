@@ -1,0 +1,56 @@
+<?php
+
+namespace App\Filament\Admin\Resources\Penawarans\Pages;
+
+use App\Filament\Admin\Resources\Penawarans\PenawaranResource;
+use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Support\Facades\DB;
+use Filament\Facades\Filament;
+
+class CreatePenawaran extends CreateRecord
+{
+    protected static string $resource = PenawaranResource::class;
+
+    public static function nextNumber(?string $date = null): string
+    {
+        $date = $date ? \Illuminate\Support\Carbon::parse($date) : now();
+        $roman = [1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI', 7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'][$date->month];
+        $suffix = "-KJM/{$roman}/{$date->year}";
+        $last = DB::table('penawaran')->where('no_penawaran', 'like', "%{$suffix}")
+            ->selectRaw("MAX(CAST(SUBSTRING_INDEX(no_penawaran, '-', 1) AS UNSIGNED)) AS last_num")
+            ->value('last_num');
+
+        return str_pad((string) (((int) $last) + 1), 2, '0', STR_PAD_LEFT) . $suffix;
+    }
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+    {
+        $state = $this->form->getRawState();
+        $items = is_array($state) ? ($state['penawaran_items'] ?? []) : [];
+        $subtotal = collect($items)->sum(fn (array $item): float => (float) ($item['qty'] ?? 0) * (float) ($item['harga_satuan'] ?? 0));
+        $discountRate = ($state['enable_diskon'] ?? false) ? (float) ($state['diskon_persen'] ?? 0) : 0.0;
+        $discount = round($subtotal * $discountRate / 100, 2);
+        $afterDiscount = $subtotal - $discount;
+        $taxRate = ($state['enable_ppn'] ?? false) ? (float) ($state['ppn_persen'] ?? 0) : 0.0;
+        $tax = round($afterDiscount * $taxRate / 100, 2);
+
+        $data['no_penawaran'] = filled($data['no_penawaran'] ?? null) ? $data['no_penawaran'] : self::nextNumber($data['tanggal'] ?? null);
+        $data['berlaku_sampai'] = filled($data['tanggal'] ?? null) ? \Illuminate\Support\Carbon::parse($data['tanggal'])->addWeek()->toDateString() : now()->addWeek()->toDateString();
+        $data['subtotal'] = $subtotal;
+        $data['diskon_persen'] = $discountRate;
+        $data['diskon_nominal'] = $discount;
+        $data['ppn_persen'] = $taxRate;
+        $data['ppn_nominal'] = $tax;
+        $data['total'] = $afterDiscount + $tax;
+        $data['created_by'] = Filament::auth()->id();
+        $data['status'] = 'draft';
+        $data['is_history'] = false;
+
+        return $data;
+    }
+
+    protected function getRedirectUrl(): string
+    {
+        return PenawaranResource::getUrl('view', ['record' => $this->record]);
+    }
+}

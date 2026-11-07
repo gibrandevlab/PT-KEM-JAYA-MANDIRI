@@ -146,7 +146,7 @@ class PurchaseOrder extends Model
 
 	public function po_items()
 	{
-		return $this->hasMany(PoItem::class, 'po_id');
+		return $this->hasMany(PoItem::class, 'po_id')->orderBy('urutan');
 	}
 
 	public function surat_jalans()

@@ -7,8 +7,12 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
 /**
  * Class User
@@ -21,6 +25,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $role
  * @property string|null $foto
  * @property bool $aktif
+ * @property string|null $remember_token
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * 
@@ -32,8 +37,10 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @package App\Models
  */
-class User extends Model
+class User extends Authenticatable implements FilamentUser, HasName
 {
+	use Notifiable;
+
 	protected $table = 'users';
 
 	protected $casts = [
@@ -41,7 +48,8 @@ class User extends Model
 	];
 
 	protected $hidden = [
-		'password'
+		'password',
+		'remember_token',
 	];
 
 	protected $fillable = [
@@ -51,8 +59,54 @@ class User extends Model
 		'password',
 		'role',
 		'foto',
-		'aktif'
+		'aktif',
+		'remember_token',
 	];
+
+	public function canAccessPanel(Panel $panel): bool
+	{
+		return (bool) $this->aktif && in_array($this->role, ['admin', 'pekerja'], true);
+	}
+
+	public function hasAccess(string $feature, string $action = 'view'): bool
+	{
+		if (! array_key_exists($feature, config('access.features', [])) || ! in_array($action, config('access.actions', []), true)) {
+			return false;
+		}
+
+		if (config('access.overrides_enabled', false)) {
+			$override = UserAccessOverride::query()
+				->where('user_id', $this->getKey())
+				->where('feature', $feature)
+				->where('action', $action)
+				->value('allowed');
+
+			if ($override !== null) {
+				return (bool) $override;
+			}
+		}
+
+		$defaults = config("access.defaults.{$this->role}", []);
+		return (in_array($this->role, ['admin', 'pekerja'], true) && in_array('*', $defaults['*'] ?? [], true))
+			|| in_array('*', $defaults[$feature] ?? [], true)
+			|| in_array($action, $defaults[$feature] ?? [], true)
+			|| in_array('*', $defaults['*']['*'] ?? [], true);
+	}
+
+	public function accessOverrides()
+	{
+		return $this->hasMany(UserAccessOverride::class);
+	}
+
+	public function getFilamentName(): string
+	{
+		return $this->nama ?? $this->username ?? 'User';
+	}
+
+	public function getNameAttribute(): string
+	{
+		return $this->nama ?? $this->username ?? 'User';
+	}
 
 	public function invoices()
 	{

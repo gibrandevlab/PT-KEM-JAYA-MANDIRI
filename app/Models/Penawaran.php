@@ -134,7 +134,7 @@ class Penawaran extends Model
 
 	public function penawaran_items()
 	{
-		return $this->hasMany(PenawaranItem::class);
+		return $this->hasMany(PenawaranItem::class)->orderBy('urutan');
 	}
 
 	public function purchase_orders()
