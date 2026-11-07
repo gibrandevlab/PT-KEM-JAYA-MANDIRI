@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login - KJM</title>
+<title>Masuk - KJM</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -332,29 +332,29 @@
       <form method="POST" action="{{ route('login.post') }}" autocomplete="on">
         @csrf
         <div class="form-group">
-          <label class="form-label">Username / Email</label>
+          <label class="form-label">Nama Pengguna / Email</label>
           <div class="input-wrap">
             <i class="fas fa-user"></i>
-            <input type="text" name="username" class="form-control" placeholder="Masukkan username" value="{{ old('username') }}" autocomplete="username" required autofocus>
+            <input type="text" name="username" class="form-control" placeholder="Masukkan nama pengguna atau email" value="{{ old('username') }}" autocomplete="username" required autofocus>
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Password</label>
+          <label class="form-label">Kata Sandi</label>
           <div class="input-wrap">
             <i class="fas fa-lock"></i>
-            <input id="password" type="password" name="password" class="form-control password-input" placeholder="Masukkan password" autocomplete="current-password" required>
-            <button class="password-toggle" type="button" id="toggle-password" aria-label="Tampilkan password" aria-pressed="false">
+            <input id="password" type="password" name="password" class="form-control password-input" placeholder="Masukkan kata sandi" autocomplete="current-password" required>
+            <button class="password-toggle" type="button" id="toggle-password" aria-label="Tampilkan kata sandi" aria-pressed="false">
               <i class="fas fa-eye" aria-hidden="true"></i>
             </button>
           </div>
         </div>
         <label class="remember-row">
           <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
-          <span>Remember Me</span>
+          <span>Ingat saya</span>
         </label>
         <button type="submit" class="btn-login"><i class="fas fa-right-to-bracket"></i> &nbsp;Masuk</button>
       </form>
-      <div class="login-footer">&copy; 2026 PT KEM JAYA MANDIRI. All rights reserved.</div>
+      <div class="login-footer">&copy; 2026 PT KEM JAYA MANDIRI. Hak cipta dilindungi.</div>
     </div>
   </div>
   <script>

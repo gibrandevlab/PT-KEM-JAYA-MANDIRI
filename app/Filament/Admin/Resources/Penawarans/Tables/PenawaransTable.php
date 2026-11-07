@@ -22,7 +22,9 @@ class PenawaransTable
         $isHistory = request()->routeIs('filament.admin.resources.penawarans.history');
 
         return $table
-            ->searchPlaceholder('Cari nomor penawaran/customer...')
+            ->defaultPaginationPageOption(15)
+            ->paginationPageOptions([15, 30, 50])
+            ->searchPlaceholder('Cari nomor penawaran atau pelanggan...')
             ->searchable()
             ->defaultSort('created_at', 'desc')
             ->columns([
@@ -31,7 +33,7 @@ class PenawaransTable
                         ? preg_replace('/^(\d+-)/', '$1SDK/', $state)
                         : $state),
                 TextColumn::make('tanggal')->label('Tanggal')->date('d/m/Y')->sortable(),
-                TextColumn::make('nama_customer')->label('Customer')->searchable()->sortable(),
+                TextColumn::make('nama_customer')->label('Pelanggan')->searchable()->sortable(),
                 TextColumn::make('total')->label('Total')->money('IDR')->sortable(),
                 TextColumn::make('user.nama')->label('Dibuat oleh')->sortable(),
             ])
@@ -39,10 +41,10 @@ class PenawaransTable
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()->icon('heroicon-o-eye'),
-                    Action::make('print')->label('Cetak / Print')->icon('heroicon-o-printer')
+                    Action::make('print')->label('Cetak')->icon('heroicon-o-printer')
                         ->url(fn (Penawaran $record): string => route('penawarans.print', $record))->openUrlInNewTab(),
                     Action::make('toggleHistory')
-                        ->label($isHistory ? 'Kembalikan ke Aktif' : 'Pindah ke History')
+                    ->label($isHistory ? 'Kembalikan ke Aktif' : 'Pindahkan ke Riwayat')
                         ->icon($isHistory ? 'heroicon-o-arrow-uturn-left' : 'heroicon-o-archive-box')
                         ->color('warning')->requiresConfirmation()
                         ->visible(fn (): bool => auth()->user()?->hasAccess('penawarans', 'update') ?? false)
@@ -50,7 +52,7 @@ class PenawaransTable
                             'is_history' => ! $isHistory,
                             ...($isHistory && $record->status === 'selesai' ? ['status' => 'draft'] : []),
                         ])),
-                    Action::make('edit')->label('Edit')->icon('heroicon-o-pencil-square')
+                    Action::make('edit')->label('Ubah')->icon('heroicon-o-pencil-square')
                         ->url(fn (Penawaran $record): string => PenawaranResource::getUrl('edit', ['record' => $record]))
                         ->visible(fn (Penawaran $record): bool => ! $isHistory && PenawaranResource::canEdit($record)),
                     DeleteAction::make()->icon('heroicon-o-trash')
@@ -62,7 +64,7 @@ class PenawaransTable
             ->recordAction(fn (): ?string => null)
             ->toolbarActions([
                 BulkActionGroup::make([
-                    BulkAction::make('archive')->label('Pindahkan ke History')->icon('heroicon-o-archive-box')
+                    BulkAction::make('archive')->label('Pindahkan ke Riwayat')->icon('heroicon-o-archive-box')
                         ->requiresConfirmation()->visible(fn (): bool => ! $isHistory && (auth()->user()?->hasAccess('penawarans', 'update') ?? false))
                         ->action(fn (Collection $records) => $records->each->update(['is_history' => true])),
                     BulkAction::make('restore')->label('Kembalikan ke Aktif')->icon('heroicon-o-arrow-uturn-left')
@@ -70,7 +72,7 @@ class PenawaransTable
                         ->action(fn (Collection $records) => $records->each(function (Penawaran $record): void {
                             $record->update(['is_history' => false, 'status' => $record->status === 'selesai' ? 'draft' : $record->status]);
                         })),
-                    BulkAction::make('exportExcel')->label('Export Excel')->icon('heroicon-o-document-arrow-down')
+                    BulkAction::make('exportExcel')->label('Ekspor Excel')->icon('heroicon-o-document-arrow-down')
                         ->visible(fn (): bool => $isHistory)
                         ->action(function (Collection $records) {
                             $records->loadMissing('penawaran_items');

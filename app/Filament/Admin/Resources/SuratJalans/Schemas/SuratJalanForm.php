@@ -22,10 +22,10 @@ class SuratJalanForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Pengiriman')->description('Pilih referensi, customer, alamat tujuan, dan PIC penerima.')->columns(2)->schema([
+            Section::make('Informasi Pengiriman')->description('Pilih referensi, pelanggan, alamat tujuan, dan PIC penerima.')->columns(2)->schema([
                 TextInput::make('no_sj')->label('No. SJ')->required()->unique(ignoreRecord: true)->default(fn (): string => CreateSuratJalan::nextNumber()),
                 DatePicker::make('tanggal')->label('Tanggal SJ')->required()->default(now()),
-                Select::make('po_id')->label('Referensi Purchase Order')->options(fn (): array => PurchaseOrder::query()->whereIn('status', ['diproses', 'selesai'])->orderByDesc('created_at')->pluck('no_po', 'id')->all())
+                Select::make('po_id')->label('Referensi Pesanan Pembelian')->options(fn (): array => PurchaseOrder::query()->whereIn('status', ['diproses', 'selesai'])->orderByDesc('created_at')->pluck('no_po', 'id')->all())
                     ->searchable()->preload()->live()->afterStateUpdated(function ($state, Set $set): void {
                         if (! $state) return;
                         $po = PurchaseOrder::query()->with('po_items')->find($state);
@@ -58,7 +58,7 @@ class SuratJalanForm
                             'nama_barang' => $item->nama_barang, 'satuan' => $item->satuan, 'qty' => $item->qty,
                         ])->all());
                     }),
-                Select::make('customer_id')->label('Perusahaan Customer')->options(fn (): array => Customer::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
+                Select::make('customer_id')->label('Perusahaan Pelanggan')->options(fn (): array => Customer::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
                     ->searchable()->preload()->live()->afterStateUpdated(function ($state, Set $set): void {
                         $customer = $state ? Customer::query()->find($state) : null;
                         if (! $customer) return;
@@ -72,7 +72,7 @@ class SuratJalanForm
                 TextInput::make('kota_tujuan')->label('Kota Tujuan'),
                 TextInput::make('telepon_penerima')->label('Telepon Penerima')->tel(),
                 TextInput::make('pic_penerima')->label('PIC Penerima'),
-                TextInput::make('no_po')->label('Nomor PO Customer'),
+                TextInput::make('no_po')->label('Nomor PO Pelanggan'),
                 TextInput::make('kendaraan')->label('Kendaraan'),
                 TextInput::make('no_polisi')->label('Nomor Polisi'),
                 Textarea::make('catatan')->label('Catatan')->rows(3)->columnSpanFull(),
@@ -88,7 +88,7 @@ class SuratJalanForm
                             }),
                         TextInput::make('kode_barang')->label('Kode Barang'),
                         TextInput::make('nama_barang')->label('Nama Barang')->required(),
-                        TextInput::make('qty')->label('Qty')->numeric()->minValue(1)->default(1)->required(),
+                        TextInput::make('qty')->label('Jumlah')->numeric()->minValue(1)->default(1)->required(),
                         TextInput::make('satuan')->label('Satuan')->default('Pcs')->required(),
                         TextInput::make('keterangan')->label('Keterangan'),
                     ]),

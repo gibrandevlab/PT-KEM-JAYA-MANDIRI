@@ -12,14 +12,14 @@ class ListInvoiceHistory extends ListRecords
 {
     use DeletesHistoryRecords;
     protected static string $resource = InvoiceResource::class;
-    protected static ?string $title = 'History Invoice';
-    protected static ?string $breadcrumb = 'History';
+    protected static ?string $title = 'Riwayat Faktur';
+    protected static ?string $breadcrumb = 'Riwayat';
 
     protected function authorizeAccess(): void { abort_unless(InvoiceResource::canViewAny(), 403); }
 
     protected function getHeaderActions(): array
     {
-        return [Action::make('back')->label('Kembali ke Invoice')->icon('heroicon-o-arrow-left')->url(InvoiceResource::getUrl('index')), $this->deleteAllHistoryAction('invoices')];
+        return [Action::make('back')->label('Kembali ke Faktur')->icon('heroicon-o-arrow-left')->url(InvoiceResource::getUrl('index')), $this->deleteAllHistoryAction('invoices')];
     }
 
     protected function getTableQuery(): Builder

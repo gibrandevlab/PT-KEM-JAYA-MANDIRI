@@ -22,13 +22,15 @@ class PurchaseOrdersTable
         $isHistory = request()->routeIs('filament.admin.resources.purchase-orders.history');
 
         return $table
+            ->defaultPaginationPageOption(15)
+            ->paginationPageOptions([15, 30, 50])
             ->searchable()
-            ->searchPlaceholder('Cari nomor/perusahaan...')
+            ->searchPlaceholder('Cari nomor atau perusahaan...')
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('no_po')->label('No. PO')->searchable()->sortable(),
                 TextColumn::make('tanggal')->label('Tanggal')->date('d/m/Y')->sortable(),
-                TextColumn::make('jenis')->label('Jenis')->badge()->formatStateUsing(fn (string $state, PurchaseOrder $record): string => $state === 'dari_customer' ? 'Dari Customer' : ($record->kategori_po ?: 'Ke Vendor')),
+                TextColumn::make('jenis')->label('Jenis')->badge()->formatStateUsing(fn (string $state, PurchaseOrder $record): string => $state === 'dari_customer' ? 'Dari Pelanggan' : ($record->kategori_po ?: 'Ke Pemasok')),
                 TextColumn::make('nama_perusahaan')->label('Perusahaan')->searchable()->sortable(),
                 TextColumn::make('total')->label('Total')->money(fn (PurchaseOrder $record): string => $record->currency ?: 'IDR')->sortable(),
                 TextColumn::make('user.nama')->label('Dibuat oleh')->sortable(),
@@ -39,14 +41,14 @@ class PurchaseOrdersTable
                     ViewAction::make()->icon('heroicon-o-eye'),
                     Action::make('print')->label('Cetak')->icon('heroicon-o-printer')
                         ->url(fn (PurchaseOrder $record): string => route('purchase-orders.print', $record))->openUrlInNewTab(),
-                    Action::make('toggleHistory')->label($isHistory ? 'Kembalikan ke Aktif' : 'Pindah ke History')
+                    Action::make('toggleHistory')->label($isHistory ? 'Kembalikan ke Aktif' : 'Pindahkan ke Riwayat')
                         ->icon($isHistory ? 'heroicon-o-arrow-uturn-left' : 'heroicon-o-archive-box')->color('warning')->requiresConfirmation()
                         ->visible(fn (): bool => auth()->user()?->hasAccess('purchase_orders', 'update') ?? false)
                         ->action(fn (PurchaseOrder $record) => $record->update([
                             'is_history' => ! $isHistory,
                             ...($isHistory && $record->status === 'selesai' ? ['status' => 'draft'] : []),
                         ])),
-                    Action::make('edit')->label('Edit')->icon('heroicon-o-pencil-square')
+                    Action::make('edit')->label('Ubah')->icon('heroicon-o-pencil-square')
                         ->url(fn (PurchaseOrder $record): string => PurchaseOrderResource::getUrl('edit', ['record' => $record]))
                         ->visible(fn (PurchaseOrder $record): bool => PurchaseOrderResource::canEdit($record) && ! $isHistory),
                     DeleteAction::make()->icon('heroicon-o-trash')->visible(fn (): bool => (auth()->user()?->hasAccess('purchase_orders', 'delete') ?? false) && (! $isHistory || auth()->user()?->role === 'admin'))
@@ -56,7 +58,7 @@ class PurchaseOrdersTable
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    BulkAction::make('archive')->label('Pindahkan ke History')->icon('heroicon-o-archive-box')->requiresConfirmation()
+                    BulkAction::make('archive')->label('Pindahkan ke Riwayat')->icon('heroicon-o-archive-box')->requiresConfirmation()
                         ->visible(fn (): bool => ! $isHistory && (auth()->user()?->hasAccess('purchase_orders', 'update') ?? false))
                         ->action(fn (Collection $records) => $records->each->update(['is_history' => true])),
                     BulkAction::make('restore')->label('Kembalikan ke Aktif')->icon('heroicon-o-arrow-uturn-left')->requiresConfirmation()
@@ -64,7 +66,7 @@ class PurchaseOrdersTable
                         ->action(fn (Collection $records) => $records->each(function (PurchaseOrder $record): void {
                             $record->update(['is_history' => false, 'status' => $record->status === 'selesai' ? 'draft' : $record->status]);
                         })),
-                    BulkAction::make('exportHistory')->label('Export Excel')->icon('heroicon-o-document-arrow-down')->visible(fn (): bool => $isHistory)
+                    BulkAction::make('exportHistory')->label('Ekspor Excel')->icon('heroicon-o-document-arrow-down')->visible(fn (): bool => $isHistory)
                         ->action(function (Collection $records) {
                             return response()->streamDownload(function () use ($records): void {
                                 $output = fopen('php://output', 'w'); fwrite($output, "\xEF\xBB\xBF");

@@ -35,7 +35,7 @@ class LatestPenawaransTable extends BaseWidget
                     ->color('primary')
                     ->searchable(),
                 TextColumn::make('nama_customer')
-                    ->label('Customer')
+                    ->label('Pelanggan')
                     ->limit(20)
                     ->searchable(),
                 TextColumn::make('total')

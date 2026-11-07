@@ -8,8 +8,8 @@
         <div class="report-toolbar">
             <label class="report-field">Jenis Laporan
                 <select name="jenis">
-                    <option value="penjualan" @selected($jenis === 'penjualan')>Laporan Penjualan (Invoice)</option>
-                    <option value="pembelian" @selected($jenis === 'pembelian')>Laporan Pembelian (PO Vendor)</option>
+                    <option value="penjualan" @selected($jenis === 'penjualan')>Laporan Penjualan (Faktur)</option>
+                    <option value="pembelian" @selected($jenis === 'pembelian')>Laporan Pembelian (Pesanan Pembelian Pemasok)</option>
                     <option value="stok" @selected($jenis === 'stok')>Laporan Pergerakan Stok</option>
                 </select>
             </label>
@@ -43,7 +43,7 @@
         </div>
         <div class="report-actions">
             <button type="submit" class="fi-btn fi-btn-color-primary">Tampilkan</button>
-            <a href="{{ $exportUrl }}" class="fi-btn fi-btn-color-gray"><x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" /> Export Excel</a>
+            <a href="{{ $exportUrl }}" class="fi-btn fi-btn-color-gray"><x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" /> Ekspor Excel</a>
             <button type="button" onclick="window.print()" class="fi-btn fi-btn-color-gray"><x-filament::icon icon="heroicon-o-printer" class="h-4 w-4" /> Cetak</button>
         </div>
     </form>
@@ -51,7 +51,7 @@
     <section class="fi-section report-card rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 p-6" id="report-content">
         <div class="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 pb-4 dark:border-white/10">
             <div>
-                <h2 class="text-xl font-bold">{{ ['penjualan' => 'Laporan Penjualan', 'pembelian' => 'Laporan Pembelian Vendor', 'stok' => 'Laporan Pergerakan Stok'][$jenis] }}</h2>
+                <h2 class="text-xl font-bold">{{ ['penjualan' => 'Laporan Penjualan', 'pembelian' => 'Laporan Pembelian Pemasok', 'stok' => 'Laporan Pergerakan Stok'][$jenis] }}</h2>
                 <p class="mt-1 text-sm text-gray-500">Periode {{ \Carbon\Carbon::parse($dari)->format('d/m/Y') }} — {{ \Carbon\Carbon::parse($sampai)->format('d/m/Y') }}</p>
             </div>
             <div class="text-sm text-gray-500">{{ number_format($count) }} data</div>
@@ -59,22 +59,22 @@
 
         @if($jenis === 'penjualan')
             <div class="report-stat-grid">
-                <div class="report-stat"><div class="report-stat-label">Nilai invoice</div><div class="report-stat-value">Rp {{ number_format($total, 0, ',', '.') }}</div></div>
+                <div class="report-stat"><div class="report-stat-label">Nilai faktur</div><div class="report-stat-value">Rp {{ number_format($total, 0, ',', '.') }}</div></div>
                 <div class="report-stat"><div class="report-stat-label">Sudah dibayar</div><div class="report-stat-value">Rp {{ number_format($paidTotal, 0, ',', '.') }}</div></div>
-                <div class="report-stat"><div class="report-stat-label">Jumlah invoice</div><div class="report-stat-value">{{ number_format($count) }}</div></div>
+                <div class="report-stat"><div class="report-stat-label">Jumlah faktur</div><div class="report-stat-value">{{ number_format($count) }}</div></div>
             </div>
             <div class="report-scroll"><table class="report-table">
-                <thead><tr class="border-b text-xs uppercase text-gray-500"><th class="p-3">Tanggal</th><th class="p-3">No. Invoice</th><th class="p-3">Customer</th><th class="p-3">No. SJ</th><th class="p-3">Status Pembayaran</th><th class="p-3 text-right">Total</th><th class="p-3">Detail</th></tr></thead>
+                <thead><tr class="border-b text-xs uppercase text-gray-500"><th class="p-3">Tanggal</th><th class="p-3">Nomor Faktur</th><th class="p-3">Pelanggan</th><th class="p-3">Nomor SJ</th><th class="p-3">Status Pembayaran</th><th class="p-3 text-right">Total</th><th class="p-3">Rincian</th></tr></thead>
                 <tbody>
                 @forelse($rows as $invoice)
-                    <tr class="border-b border-gray-100 dark:border-white/5"><td class="p-3">{{ $invoice->tanggal?->format('d/m/Y') }}</td><td class="p-3 font-semibold">{{ $invoice->no_invoice }}</td><td class="p-3">{{ $invoice->nama_customer }}</td><td class="p-3">{{ $invoice->surat_jalan?->no_sj ?: '-' }}</td><td class="p-3"><span class="report-badge report-badge-{{ strtolower($invoice->status_payment ?: 'unpaid') }}">{{ ucfirst(strtolower($invoice->status_payment ?: 'Unpaid')) }}</span></td><td class="p-3 text-right">Rp {{ number_format((float) $invoice->total, 0, ',', '.') }}</td><td class="p-3"><a title="Lihat detail invoice" href="{{ \App\Filament\Admin\Resources\Invoices\InvoiceResource::getUrl('view', ['record' => $invoice]) }}"><x-filament::icon icon="heroicon-o-eye" class="h-5 w-5" /></a></td></tr>
-                @empty<tr><td colspan="7" class="p-10 text-center text-gray-500">Tidak ada invoice pada periode ini.</td></tr>@endforelse
+                    <tr class="border-b border-gray-100 dark:border-white/5"><td class="p-3">{{ $invoice->tanggal?->format('d/m/Y') }}</td><td class="p-3 font-semibold">{{ $invoice->no_invoice }}</td><td class="p-3">{{ $invoice->nama_customer }}</td><td class="p-3">{{ $invoice->surat_jalan?->no_sj ?: '-' }}</td><td class="p-3"><span class="report-badge report-badge-{{ strtolower($invoice->status_payment ?: 'unpaid') }}">{{ $invoice->status_payment === 'Paid' ? 'Lunas' : ($invoice->status_payment === 'Unpaid' ? 'Belum Dibayar' : 'Belum Dibayar') }}</span></td><td class="p-3 text-right">Rp {{ number_format((float) $invoice->total, 0, ',', '.') }}</td><td class="p-3"><a title="Lihat rincian faktur" href="{{ \App\Filament\Admin\Resources\Invoices\InvoiceResource::getUrl('view', ['record' => $invoice]) }}"><x-filament::icon icon="heroicon-o-eye" class="h-5 w-5" /></a></td></tr>
+                @empty<tr><td colspan="7" class="p-10 text-center text-gray-500">Tidak ada faktur pada periode ini.</td></tr>@endforelse
                 </tbody>
             </table></div>
         @elseif($jenis === 'pembelian')
             <div class="report-stat-grid"><div class="report-stat"><div class="report-stat-label">Total pembelian</div><div class="report-stat-value">Rp {{ number_format($total, 0, ',', '.') }}</div></div><div class="report-stat"><div class="report-stat-label">Jumlah PO vendor</div><div class="report-stat-value">{{ number_format($count) }}</div></div></div>
             <div class="report-scroll"><table class="report-table">
-                <thead><tr class="border-b text-xs uppercase text-gray-500"><th class="p-3">Tanggal</th><th class="p-3">No. PO</th><th class="p-3">Vendor</th><th class="p-3 text-right">Total</th><th class="p-3">Detail</th></tr></thead>
+                <thead><tr class="border-b text-xs uppercase text-gray-500"><th class="p-3">Tanggal</th><th class="p-3">Nomor PO</th><th class="p-3">Pemasok</th><th class="p-3 text-right">Total</th><th class="p-3">Rincian</th></tr></thead>
                 <tbody>
                 @forelse($rows as $purchaseOrder)
                     <tr class="border-b border-gray-100 dark:border-white/5"><td class="p-3">{{ $purchaseOrder->tanggal?->format('d/m/Y') }}</td><td class="p-3 font-semibold">{{ $purchaseOrder->no_po }}</td><td class="p-3">{{ $purchaseOrder->nama_perusahaan }}</td><td class="p-3 text-right">Rp {{ number_format((float) $purchaseOrder->total, 0, ',', '.') }}</td><td class="p-3"><a title="Lihat detail PO" href="{{ \App\Filament\Admin\Resources\PurchaseOrders\PurchaseOrderResource::getUrl('view', ['record' => $purchaseOrder]) }}"><x-filament::icon icon="heroicon-o-eye" class="h-5 w-5" /></a></td></tr>
@@ -83,7 +83,7 @@
             </table></div>
         @else
             <div class="report-scroll"><table class="report-table">
-                <thead><tr class="border-b text-xs uppercase text-gray-500"><th class="p-3">Tanggal & Waktu</th><th class="p-3">Kode</th><th class="p-3">Nama Barang</th><th class="p-3">Jenis</th><th class="p-3 text-right">Qty</th><th class="p-3 text-right">Stok Sebelum</th><th class="p-3 text-right">Stok Sesudah</th><th class="p-3">Keterangan</th><th class="p-3">User</th><th class="p-3">Detail</th></tr></thead>
+                <thead><tr class="border-b text-xs uppercase text-gray-500"><th class="p-3">Tanggal & Waktu</th><th class="p-3">Kode</th><th class="p-3">Nama Barang</th><th class="p-3">Jenis</th><th class="p-3 text-right">Jumlah</th><th class="p-3 text-right">Stok Sebelum</th><th class="p-3 text-right">Stok Sesudah</th><th class="p-3">Keterangan</th><th class="p-3">Pengguna</th><th class="p-3">Rincian</th></tr></thead>
                 <tbody>
                 @forelse($rows as $log)
                     <tr class="border-b border-gray-100 dark:border-white/5"><td class="p-3">{{ $log->created_at?->format('d/m/Y H:i') }}</td><td class="p-3">{{ $log->barang?->kode_barang }}</td><td class="p-3">{{ $log->barang?->nama_barang }}</td><td class="p-3">{{ ucfirst($log->jenis) }}</td><td class="p-3 text-right">{{ number_format((float) $log->qty, 2, ',', '.') }}</td><td class="p-3 text-right">{{ number_format((float) $log->stok_sebelum, 2, ',', '.') }}</td><td class="p-3 text-right">{{ number_format((float) $log->stok_sesudah, 2, ',', '.') }}</td><td class="p-3">{{ $log->keterangan ?: '-' }}</td><td class="p-3">{{ $log->user?->nama ?: 'Sistem' }}</td><td class="p-3"><a title="Lihat detail log" href="{{ \App\Filament\Admin\Resources\StokLogs\StokLogResource::getUrl('view', ['record' => $log]) }}"><x-filament::icon icon="heroicon-o-eye" class="h-5 w-5" /></a></td></tr>

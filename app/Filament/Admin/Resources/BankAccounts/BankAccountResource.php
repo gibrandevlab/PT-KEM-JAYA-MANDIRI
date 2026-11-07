@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 class BankAccountResource extends Resource
 {
     protected static ?string $model = BankAccount::class;
+    protected static ?string $modelLabel = 'rekening bank';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

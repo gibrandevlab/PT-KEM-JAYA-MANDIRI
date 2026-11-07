@@ -14,14 +14,15 @@ class StockOverview extends BaseWidget
     protected function getStats(): array
     {
         $totalBarang = Barang::count();
+        $totalUnitStok = (float) Barang::sum('stok');
         $totalLowStock = Barang::whereColumn('stok', '<=', 'stok_minimum')
             ->where('stok_minimum', '>', 0)
             ->count();
         $totalStokHabis = Barang::where('stok', '<=', 0)->count();
 
         return [
-            Stat::make('Total Item Gudang', number_format($totalBarang))
-                ->description('Semua jenis barang terdaftar')
+            Stat::make('Total Item Gudang', number_format($totalUnitStok, 0, ',', '.'))
+                ->description('Jumlah unit stok dari seluruh jenis barang')
                 ->descriptionIcon('heroicon-m-cube')
                 ->color('info')
                 ->url(BarangResource::getUrl()),

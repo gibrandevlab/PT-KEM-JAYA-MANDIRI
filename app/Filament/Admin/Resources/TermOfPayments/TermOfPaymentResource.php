@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 class TermOfPaymentResource extends Resource
 {
     protected static ?string $model = TermOfPayment::class;
+    protected static ?string $modelLabel = 'syarat pembayaran';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

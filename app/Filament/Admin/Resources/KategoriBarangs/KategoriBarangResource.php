@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 class KategoriBarangResource extends Resource
 {
     protected static ?string $model = KategoriBarang::class;
+    protected static ?string $modelLabel = 'kategori barang';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

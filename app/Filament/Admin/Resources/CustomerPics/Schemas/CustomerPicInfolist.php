@@ -18,7 +18,7 @@ class CustomerPicInfolist
                 TextEntry::make('telepon')
                     ->placeholder('-'),
                 TextEntry::make('email')
-                    ->label('Email address')
+                    ->label('Alamat Email')
                     ->placeholder('-'),
             ]);
     }

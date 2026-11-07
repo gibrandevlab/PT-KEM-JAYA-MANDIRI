@@ -28,10 +28,10 @@ class InvoiceForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Invoice')->columns(2)->schema([
-                TextInput::make('no_invoice')->label('No. Invoice')->required()->unique(ignoreRecord: true)->default(fn (): string => CreateInvoice::nextNumber()),
-                DatePicker::make('tanggal')->label('Tanggal Invoice')->required()->default(now())->live(),
-                Select::make('tipe_invoice')->label('Tipe Invoice')->options(['Langsung' => 'Full Payment', 'DP' => 'Down Payment', 'Pelunasan' => 'Balance'])->default('Langsung')->required()->live(),
+            Section::make('Informasi Faktur')->columns(2)->schema([
+                TextInput::make('no_invoice')->label('Nomor Faktur')->required()->unique(ignoreRecord: true)->default(fn (): string => CreateInvoice::nextNumber()),
+                DatePicker::make('tanggal')->label('Tanggal Faktur')->required()->default(now())->live(),
+                Select::make('tipe_invoice')->label('Jenis Faktur')->options(['Langsung' => 'Pembayaran Penuh', 'DP' => 'Uang Muka', 'Pelunasan' => 'Pelunasan'])->default('Langsung')->required()->live(),
                 Select::make('sj_id')->label('Referensi Surat Jalan')->options(fn (?Invoice $record, Get $get): array => SuratJalan::query()->with('invoices')->orderByDesc('tanggal')->get()
                     ->filter(function (SuratJalan $sj) use ($record, $get): bool {
                         $others = $sj->invoices->reject(fn (Invoice $invoice): bool => $record && $invoice->is($record));
@@ -50,7 +50,7 @@ class InvoiceForm
                         $set('shipment_number', $sj->no_sj);
                         $set('invoice_items', $sj->surat_jalan_items->map(fn ($item): array => self::itemFromReference($item))->all());
                     }),
-                Select::make('po_id')->label('Referensi Purchase Order')->options(fn (): array => PurchaseOrder::query()->orderByDesc('tanggal')->pluck('no_po', 'id')->all())
+                Select::make('po_id')->label('Referensi Pesanan Pembelian')->options(fn (): array => PurchaseOrder::query()->orderByDesc('tanggal')->pluck('no_po', 'id')->all())
                     ->searchable()->preload()->live()->afterStateUpdated(function ($state, Set $set): void {
                         $po = $state ? PurchaseOrder::query()->with('po_items')->find($state) : null;
                         if (! $po) return;
@@ -59,33 +59,33 @@ class InvoiceForm
                         $set('invoice_items', $po->po_items->map(fn ($item): array => self::itemFromReference($item))->all());
                     }),
                 Hidden::make('penawaran_id'),
-                Select::make('customer_id')->label('Customer')->options(fn (): array => Customer::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
+                Select::make('customer_id')->label('Pelanggan')->options(fn (): array => Customer::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
                     ->searchable()->preload()->live()->afterStateUpdated(function ($state, Set $set): void {
                         $customer = $state ? Customer::query()->find($state) : null;
                         if (! $customer) return;
                         $set('nama_customer', $customer->nama_perusahaan); $set('alamat_customer', $customer->alamat);
                         $set('telepon_customer', $customer->telepon); $set('npwp', $customer->npwp);
                     }),
-                TextInput::make('nama_customer')->label('Nama Customer')->required(),
-                Textarea::make('alamat_customer')->label('Alamat Customer')->rows(3),
-                TextInput::make('telepon_customer')->label('Telepon Customer')->tel(),
+                TextInput::make('nama_customer')->label('Nama Pelanggan')->required(),
+                Textarea::make('alamat_customer')->label('Alamat Pelanggan')->rows(3),
+                TextInput::make('telepon_customer')->label('Telepon Pelanggan')->tel(),
                 TextInput::make('npwp')->label('NPWP'),
                 TextInput::make('no_faktur_pajak')->label('No. Faktur Pajak'),
-                TextInput::make('po_number')->label('Nomor PO Customer'),
+                TextInput::make('po_number')->label('Nomor PO Pelanggan'),
                 DatePicker::make('tanggal_po')->label('Tanggal PO'),
                 TextInput::make('shipment_number')->label('Nomor Pengiriman'),
-                Toggle::make('is_revisi')->label('Revisi Invoice')->live(),
+                Toggle::make('is_revisi')->label('Revisi Faktur')->live(),
                 TextInput::make('revisi_ke')->label('Nomor Revisi')->visible(fn (Get $get): bool => (bool) $get('is_revisi')),
-                Select::make('dp_ref_invoice_id')->label('Referensi Invoice DP')->options(fn (Get $get): array => Invoice::query()->where('tipe_invoice', 'DP')
+                Select::make('dp_ref_invoice_id')->label('Referensi Faktur Uang Muka')->options(fn (Get $get): array => Invoice::query()->where('tipe_invoice', 'DP')
                     ->when($get('sj_id'), fn ($query, $sjId) => $query->where('sj_id', $sjId))
                     ->orderByDesc('tanggal')->pluck('no_invoice', 'id')->all())
                     ->searchable()->visible(fn (Get $get): bool => $get('tipe_invoice') === 'Pelunasan'),
-                Select::make('term_of_payment')->label('Term of Payment')->options(fn (): array => \App\Models\TermOfPayment::query()->orderBy('nama_term')->pluck('nama_term', 'nama_term')->all())->searchable(),
+                Select::make('term_of_payment')->label('Syarat Pembayaran')->options(fn (): array => \App\Models\TermOfPayment::query()->orderBy('nama_term')->pluck('nama_term', 'nama_term')->all())->searchable(),
                 Select::make('bank_account_id')->label('Rekening Bank')->options(fn (): array => BankAccount::query()->where('is_aktif', true)->orderBy('nama_bank')->get()->mapWithKeys(fn (BankAccount $bank): array => [$bank->id => "{$bank->nama_bank} — {$bank->no_rekening} ({$bank->atas_nama})"])->all())->searchable(),
                 Textarea::make('catatan')->label('Catatan')->rows(3)->columnSpanFull(),
             ]),
             Section::make('Rincian Barang')->schema([
-                Repeater::make('invoice_items')->relationship()->label('Item Invoice')->defaultItems(1)->minItems(1)->orderColumn('urutan')->columns(2)
+                Repeater::make('invoice_items')->relationship()->label('Rincian Faktur')->defaultItems(1)->minItems(1)->orderColumn('urutan')->columns(2)
                     ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => self::normalizeItem($data))
                     ->mutateRelationshipDataBeforeSaveUsing(fn (array $data): array => self::normalizeItem($data))
                     ->schema([
@@ -100,7 +100,7 @@ class InvoiceForm
                         TextInput::make('kode_barang')->label('Kode Barang'),
                         TextInput::make('nama_barang')->label('Nama Barang')->required(),
                         TextInput::make('deskripsi')->label('Deskripsi'),
-                        TextInput::make('qty')->label('Qty')->numeric()->minValue(0.01)->default(1)->required()->live(onBlur: true)->afterStateUpdated(fn ($state, Get $get, Set $set) => $set('subtotal', round((float) $state * (float) $get('harga_satuan'), 2))),
+                        TextInput::make('qty')->label('Jumlah')->numeric()->minValue(0.01)->default(1)->required()->live(onBlur: true)->afterStateUpdated(fn ($state, Get $get, Set $set) => $set('subtotal', round((float) $state * (float) $get('harga_satuan'), 2))),
                         TextInput::make('satuan')->label('Satuan')->default('Pcs')->required(),
                         TextInput::make('harga_satuan')->label('Harga Satuan')->numeric()->minValue(0)->default(0)->required()->live(onBlur: true)->afterStateUpdated(fn ($state, Get $get, Set $set) => $set('subtotal', round((float) $state * (float) $get('qty'), 2))),
                         TextInput::make('subtotal')->label('Subtotal Item')->numeric()->readOnly(),
@@ -115,7 +115,7 @@ class InvoiceForm
                 TextInput::make('dpp_nominal')->label('Nominal DPP')->numeric()->default(0),
                 TextInput::make('dp_persen')->label('DP (%)')->numeric()->default(0)->visible(fn (Get $get): bool => $get('tipe_invoice') === 'DP'),
                 TextInput::make('dp_nominal')->label('Nominal DP')->numeric()->default(0)->visible(fn (Get $get): bool => $get('tipe_invoice') === 'DP'),
-                Select::make('status_payment')->label('Status Pembayaran')->options(['Unpaid' => 'Unpaid', 'Paid' => 'Paid'])->default('Unpaid')->live(),
+                Select::make('status_payment')->label('Status Pembayaran')->options(['Unpaid' => 'Belum Dibayar', 'Paid' => 'Lunas'])->default('Unpaid')->live(),
                 DatePicker::make('tanggal_payment')->label('Tanggal Pembayaran')->visible(fn (Get $get): bool => $get('status_payment') === 'Paid'),
                 DatePicker::make('tanggal_kirim_dokumen')->label('Tanggal Kirim Dokumen'),
                 Placeholder::make('invoice_total_preview')->label('Ringkasan Total')->content(function (Get $get): string {

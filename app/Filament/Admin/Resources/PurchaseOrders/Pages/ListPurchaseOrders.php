@@ -16,7 +16,7 @@ class ListPurchaseOrders extends ListRecords
     {
         return [
             CreateAction::make(),
-            Action::make('history')->label('History')->icon('heroicon-o-clock')->url(PurchaseOrderResource::getUrl('history')),
+            Action::make('history')->label('Riwayat')->icon('heroicon-o-clock')->url(PurchaseOrderResource::getUrl('history')),
         ];
     }
 

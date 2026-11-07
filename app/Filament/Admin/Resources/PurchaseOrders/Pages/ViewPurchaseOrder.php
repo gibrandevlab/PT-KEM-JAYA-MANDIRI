@@ -24,7 +24,7 @@ class ViewPurchaseOrder extends ViewRecord
                 ->fillForm(fn (PurchaseOrder $record): array => ['status' => $record->status])
                 ->form([\Filament\Forms\Components\Select::make('status')->options(['draft' => 'Draft', 'diproses' => 'Diproses', 'selesai' => 'Selesai', 'dibatalkan' => 'Dibatalkan'])->required()])
                 ->action(function (PurchaseOrder $record, array $data): void { PurchaseOrderStatusService::change($record, $data['status']); $this->refreshFormData(['status']); }),
-            Action::make('createInvoice')->label('Buat Invoice dari PO')->icon('heroicon-o-receipt-percent')
+            Action::make('createInvoice')->label('Buat Faktur dari PO')->icon('heroicon-o-receipt-percent')
                 ->visible(fn (PurchaseOrder $record): bool => auth()->user()?->role === 'admin' && in_array($record->status, ['diproses', 'selesai'], true))
                 ->url(fn (PurchaseOrder $record): string => InvoiceResource::getUrl('create', ['from_po' => $record->id])),
         ];

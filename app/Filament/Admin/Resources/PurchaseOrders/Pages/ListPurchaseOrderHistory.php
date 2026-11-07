@@ -12,8 +12,8 @@ class ListPurchaseOrderHistory extends ListRecords
 {
     use DeletesHistoryRecords;
     protected static string $resource = PurchaseOrderResource::class;
-    protected static ?string $title = 'History Purchase Order';
-    protected static ?string $breadcrumb = 'History';
+    protected static ?string $title = 'Riwayat Pesanan Pembelian';
+    protected static ?string $breadcrumb = 'Riwayat';
 
     protected function authorizeAccess(): void
     {
@@ -23,7 +23,7 @@ class ListPurchaseOrderHistory extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('back')->label('Kembali ke Purchase Order')->icon('heroicon-o-arrow-left')->url(PurchaseOrderResource::getUrl('index')),
+            Action::make('back')->label('Kembali ke Pesanan Pembelian')->icon('heroicon-o-arrow-left')->url(PurchaseOrderResource::getUrl('index')),
             $this->deleteAllHistoryAction('purchase_orders'),
         ];
     }

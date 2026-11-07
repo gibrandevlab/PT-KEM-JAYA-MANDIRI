@@ -16,7 +16,7 @@ class ListInvoices extends ListRecords
     {
         return [
             CreateAction::make(),
-            Action::make('history')->label('History')->icon('heroicon-o-clock')->url(InvoiceResource::getUrl('history')),
+            Action::make('history')->label('Riwayat')->icon('heroicon-o-clock')->url(InvoiceResource::getUrl('history')),
         ];
     }
 

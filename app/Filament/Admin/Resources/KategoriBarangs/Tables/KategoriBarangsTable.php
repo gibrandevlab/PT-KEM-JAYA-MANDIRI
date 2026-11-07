@@ -14,7 +14,9 @@ class KategoriBarangsTable
 {
     public static function configure(Table $table): Table
     {
-        return $table->columns([
+        return $table
+            ->defaultPaginationPageOption(15)
+            ->paginationPageOptions([15, 30, 50])->columns([
             TextColumn::make('nama_kategori')->label('Nama Kategori')->searchable()->sortable(),
             TextColumn::make('barangs_count')->label('Total Barang')->formatStateUsing(fn (int $state): string => "{$state} Item")->sortable(),
         ])->recordActions([

@@ -21,7 +21,7 @@ class PenawaranInfolist
                 TextEntry::make('berlaku_sampai')->label('Berlaku Sampai')->date('d F Y')->placeholder('-'),
                 TextEntry::make('status')->badge(),
                 TextEntry::make('nama_customer')->label('Perusahaan'),
-                TextEntry::make('customer.nama_perusahaan')->label('Data Customer')->placeholder('-'),
+                TextEntry::make('customer.nama_perusahaan')->label('Data Pelanggan')->placeholder('-'),
                 TextEntry::make('alamat_customer')->label('Alamat')->placeholder('-')->columnSpanFull(),
                 TextEntry::make('alamat_customer_2')->label('Alamat Gudang')->placeholder('-')->columnSpanFull(),
                 TextEntry::make('telepon_customer')->label('Telepon')->placeholder('-'),
@@ -29,13 +29,13 @@ class PenawaranInfolist
                 TextEntry::make('up')->label('PIC')->placeholder('-'),
                 TextEntry::make('mobile')->label('Telepon PIC')->placeholder('-'),
                 TextEntry::make('email_up')->label('Email PIC')->placeholder('-'),
-                TextEntry::make('com_contact')->label('Com Contact')->placeholder('-'),
+                TextEntry::make('com_contact')->label('Kontak Penjualan')->placeholder('-'),
                 TextEntry::make('kode_sdk')->label('Kode SDK')->placeholder('-'),
                 IconEntry::make('use_sdk')->label('Menggunakan SDK')->boolean(),
-                TextEntry::make('perihal')->label('Note')->placeholder('-')->columnSpanFull(),
-                TextEntry::make('term_of_delivery')->label('Term of Delivery')->placeholder('-'),
-                TextEntry::make('delivery_time')->label('Delivery Time')->placeholder('-'),
-                TextEntry::make('term_of_payment')->label('Term of Payment')->placeholder('-'),
+                TextEntry::make('perihal')->label('Catatan')->placeholder('-')->columnSpanFull(),
+                TextEntry::make('term_of_delivery')->label('Syarat Pengiriman')->placeholder('-'),
+                TextEntry::make('delivery_time')->label('Waktu Pengiriman')->placeholder('-'),
+                TextEntry::make('term_of_payment')->label('Syarat Pembayaran')->placeholder('-'),
                 TextEntry::make('catatan')->label('Catatan')->placeholder('-')->columnSpanFull(),
             ]),
             Section::make('Rincian Barang')->schema([
@@ -44,7 +44,7 @@ class PenawaranInfolist
                         TextEntry::make('kode_barang')->label('Kode')->placeholder('-'),
                         TextEntry::make('nama_barang')->label('Barang'),
                         TextEntry::make('deskripsi')->label('Keterangan')->placeholder('-'),
-                        TextEntry::make('qty')->label('Qty'),
+                        TextEntry::make('qty')->label('Jumlah'),
                         TextEntry::make('satuan')->label('Satuan'),
                         TextEntry::make('harga_satuan')->label('Harga')->money('IDR'),
                         TextEntry::make('subtotal')->label('Subtotal')->money('IDR'),
@@ -62,7 +62,7 @@ class PenawaranInfolist
                 TextEntry::make('updated_at')->label('Terakhir diperbarui')->dateTime(),
             ]),
             Section::make('Riwayat & Dokumen Terkait')->columns(2)->schema([
-                RepeatableEntry::make('purchase_orders')->label('Purchase Order')
+                RepeatableEntry::make('purchase_orders')->label('Pesanan Pembelian')
                     ->schema([
                         TextEntry::make('no_po')->label('Nomor PO'),
                         TextEntry::make('created_at')->label('Dibuat')->dateTime(),

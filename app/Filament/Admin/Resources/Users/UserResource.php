@@ -26,7 +26,7 @@ class UserResource extends Resource
 
     protected static ?string $modelLabel = 'pengguna';
 
-    protected static ?string $pluralModelLabel = 'Kelola User & Akses';
+    protected static ?string $pluralModelLabel = 'Pengguna dan Hak Akses';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

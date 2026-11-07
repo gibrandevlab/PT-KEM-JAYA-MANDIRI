@@ -16,7 +16,7 @@ class ViewPenawaran extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            Action::make('cetak')->label('Cetak PDF / Print')->icon('heroicon-o-printer')
+            Action::make('cetak')->label('Cetak PDF')->icon('heroicon-o-printer')
                 ->url(fn (Penawaran $record): string => route('penawarans.print', $record))
                 ->openUrlInNewTab(),
             EditAction::make(),

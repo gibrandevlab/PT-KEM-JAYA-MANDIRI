@@ -16,7 +16,7 @@ class CustomerForm
     {
         return $schema->components([
             Section::make('Informasi Perusahaan')->columns(2)->schema([
-                TextInput::make('kode_customer')->label('Kode Customer')->required()->unique(ignoreRecord: true)->default(fn (): string => \App\Filament\Admin\Resources\Customers\Pages\CreateCustomer::nextCode())->readOnly(fn (?Customer $record): bool => $record === null),
+                TextInput::make('kode_customer')->label('Kode Pelanggan')->required()->unique(ignoreRecord: true)->default(fn (): string => \App\Filament\Admin\Resources\Customers\Pages\CreateCustomer::nextCode())->readOnly(fn (?Customer $record): bool => $record === null),
                 TextInput::make('nama_perusahaan')->label('Nama Perusahaan')->required(),
                 Repeater::make('customer_addresses_form')->label('Alamat Perusahaan')->dehydrated(false)->default(fn (?Customer $record): array => self::addresses($record?->alamat))->defaultItems(1)->columns(1)->schema([
                     Textarea::make('alamat_lengkap')->label('Alamat')->rows(2)->required(),
@@ -31,11 +31,11 @@ class CustomerForm
                 TextInput::make('email')->label('Email')->email(),
                 TextInput::make('npwp')->label('NPWP'),
             ]),
-            Section::make('PIC Customer')->columns(2)->schema([
+            Section::make('PIC Pelanggan')->columns(2)->schema([
                 TextInput::make('pic')->label('PIC Utama'),
                 TextInput::make('pic_phone')->label('Telepon PIC')->tel(),
                 TextInput::make('pic_email')->label('Email PIC')->email(),
-                Repeater::make('additional_customer_pics')->label('PIC Customer Lain')->dehydrated(false)->default(fn (?Customer $record): array => $record?->customer_pics()->where('tipe', 'Customer')->where('nama', '!=', $record->pic)->get()->map(fn ($pic): array => ['nama' => $pic->nama, 'telepon' => $pic->telepon, 'email' => $pic->email])->all() ?? [])->schema([
+                Repeater::make('additional_customer_pics')->label('PIC Pelanggan Lain')->dehydrated(false)->default(fn (?Customer $record): array => $record?->customer_pics()->where('tipe', 'Customer')->where('nama', '!=', $record->pic)->get()->map(fn ($pic): array => ['nama' => $pic->nama, 'telepon' => $pic->telepon, 'email' => $pic->email])->all() ?? [])->schema([
                     TextInput::make('nama')->label('Nama')->required(), TextInput::make('telepon')->label('Telepon')->tel(), TextInput::make('email')->label('Email')->email(),
                 ])->columns(3)->columnSpanFull(),
             ]),

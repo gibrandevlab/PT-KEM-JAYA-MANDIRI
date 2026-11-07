@@ -10,7 +10,7 @@ trait DeletesHistoryRecords
     protected function deleteAllHistoryAction(string $feature): Action
     {
         return Action::make('deleteAllHistory')
-            ->label('Hapus Semua History')
+            ->label('Hapus Semua Riwayat')
             ->icon('heroicon-o-trash')
             ->color('danger')
             ->requiresConfirmation()

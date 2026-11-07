@@ -12,8 +12,8 @@ class ListSuratJalanHistory extends ListRecords
 {
     use DeletesHistoryRecords;
     protected static string $resource = SuratJalanResource::class;
-    protected static ?string $title = 'History Surat Jalan';
-    protected static ?string $breadcrumb = 'History';
+    protected static ?string $title = 'Riwayat Surat Jalan';
+    protected static ?string $breadcrumb = 'Riwayat';
 
     protected function authorizeAccess(): void { abort_unless(SuratJalanResource::canViewAny(), 403); }
 

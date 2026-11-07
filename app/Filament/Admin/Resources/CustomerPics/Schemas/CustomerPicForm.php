@@ -21,7 +21,7 @@ class CustomerPicForm
                 TextInput::make('telepon')
                     ->tel(),
                 TextInput::make('email')
-                    ->label('Email address')
+                    ->label('Alamat Email')
                     ->email(),
             ]);
     }

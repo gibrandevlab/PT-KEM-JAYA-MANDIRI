@@ -20,7 +20,9 @@ class SuratJalansTable
     public static function configure(Table $table): Table
     {
         $isHistory = request()->routeIs('filament.admin.resources.surat-jalans.history');
-        return $table->searchable()->searchPlaceholder('Cari nomor/penerima...')->defaultSort('created_at', 'desc')
+        return $table
+            ->defaultPaginationPageOption(15)
+            ->paginationPageOptions([15, 30, 50])->searchable()->searchPlaceholder('Cari nomor/penerima...')->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('no_sj')->label('No. SJ')->searchable()->sortable(),
                 TextColumn::make('tanggal')->label('Tanggal')->date('d/m/Y')->sortable(),
@@ -34,11 +36,11 @@ class SuratJalansTable
                 ActionGroup::make([
                     ViewAction::make()->icon('heroicon-o-eye'),
                     Action::make('print')->label('Cetak')->icon('heroicon-o-printer')->url(fn (SuratJalan $record): string => route('surat-jalans.print', $record))->openUrlInNewTab(),
-                    Action::make('toggleHistory')->label($isHistory ? 'Kembalikan ke Aktif' : 'Pindah ke History')
+                    Action::make('toggleHistory')->label($isHistory ? 'Kembalikan ke Aktif' : 'Pindahkan ke Riwayat')
                         ->icon($isHistory ? 'heroicon-o-arrow-uturn-left' : 'heroicon-o-archive-box')->color('warning')->requiresConfirmation()
                         ->visible(fn (): bool => auth()->user()?->hasAccess('surat_jalans', 'update') ?? false)
                         ->action(fn (SuratJalan $record) => $record->update(['is_history' => ! $isHistory])),
-                    Action::make('edit')->label('Edit')->icon('heroicon-o-pencil-square')
+                    Action::make('edit')->label('Ubah')->icon('heroicon-o-pencil-square')
                         ->url(fn (SuratJalan $record): string => SuratJalanResource::getUrl('edit', ['record' => $record]))
                         ->visible(fn (SuratJalan $record): bool => SuratJalanResource::canEdit($record) && ! $isHistory),
                     DeleteAction::make()->icon('heroicon-o-trash')->visible(fn (): bool => (auth()->user()?->hasAccess('surat_jalans', 'delete') ?? false) && (! $isHistory || auth()->user()?->role === 'admin'))
@@ -47,17 +49,17 @@ class SuratJalansTable
                 ])->iconButton()->tooltip('Aksi'),
             ])
             ->toolbarActions([BulkActionGroup::make([
-                BulkAction::make('archive')->label('Pindahkan ke History')->icon('heroicon-o-archive-box')->requiresConfirmation()
+                BulkAction::make('archive')->label('Pindahkan ke Riwayat')->icon('heroicon-o-archive-box')->requiresConfirmation()
                     ->visible(fn (): bool => ! $isHistory && (auth()->user()?->hasAccess('surat_jalans', 'update') ?? false))
                     ->action(fn (Collection $records) => $records->each->update(['is_history' => true])),
                 BulkAction::make('restore')->label('Kembalikan ke Aktif')->icon('heroicon-o-arrow-uturn-left')->requiresConfirmation()
                     ->visible(fn (): bool => $isHistory && (auth()->user()?->hasAccess('surat_jalans', 'update') ?? false))
                     ->action(fn (Collection $records) => $records->each->update(['is_history' => false])),
-                BulkAction::make('export')->label('Export Excel')->icon('heroicon-o-document-arrow-down')->visible(fn (): bool => $isHistory)
+                BulkAction::make('export')->label('Ekspor Excel')->icon('heroicon-o-document-arrow-down')->visible(fn (): bool => $isHistory)
                     ->action(function (Collection $records) {
                         return response()->streamDownload(function () use ($records): void {
                             $output = fopen('php://output', 'w'); fwrite($output, "\xEF\xBB\xBF");
-                            fputcsv($output, ['Tanggal SJ', 'Customer', 'No. PO', 'No. SJ']);
+                            fputcsv($output, ['Tanggal SJ', 'Pelanggan', 'Nomor PO', 'Nomor SJ']);
                             foreach ($records as $record) fputcsv($output, [$record->tanggal?->format('d/m/Y'), $record->nama_penerima, $record->no_po, $record->no_sj]);
                             fclose($output);
                         }, 'History_SJ_' . now()->format('Ymd_His') . '.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);

@@ -19,6 +19,8 @@ class UsersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(15)
+            ->paginationPageOptions([15, 30, 50])
             ->defaultSort('nama')
             ->columns([
                 TextColumn::make('nama')

@@ -26,10 +26,10 @@ class PurchaseOrderForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Purchase Order')->columns(2)->schema([
+            Section::make('Informasi Pesanan Pembelian')->columns(2)->schema([
                 TextInput::make('no_po')->label('No. PO')->required()->maxLength(30)->unique(ignoreRecord: true)
                     ->default(fn (): string => CreatePurchaseOrder::nextNumber()),
-                TextInput::make('no_po_customer')->label('Your Reference'),
+                TextInput::make('no_po_customer')->label('Referensi Anda'),
                 DatePicker::make('tanggal')->label('Tanggal PO')->required()->default(now())->live(),
                 DatePicker::make('tanggal_kirim')->label('Tanggal Kirim'),
                 TextInput::make('jenis')->hidden()->default('ke_vendor')->dehydrated(),
@@ -37,7 +37,7 @@ class PurchaseOrderForm
                     ->default('Dalam Negeri')->required()->live(),
                 TextInput::make('currency')->label('Mata Uang')->default('IDR')->required()
                     ->visible(fn (Get $get): bool => $get('kategori_po') === 'Luar Negeri'),
-                Select::make('vendor_id')->label('Pilih Vendor')->options(fn (): array => Vendor::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
+                Select::make('vendor_id')->label('Pilih Pemasok')->options(fn (): array => Vendor::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
                     ->searchable()->preload()->live()->afterStateUpdated(function ($state, Set $set): void {
                         $vendor = $state ? Vendor::query()->find($state) : null;
                         if (! $vendor) return;
@@ -49,10 +49,10 @@ class PurchaseOrderForm
                 TextInput::make('nama_perusahaan')->label('Nama Perusahaan')->required()->maxLength(150),
                 Textarea::make('alamat')->label('Alamat')->rows(3),
                 TextInput::make('telepon')->label('Telepon'),
-                TextInput::make('pic')->label('PIC Vendor'),
-                TextInput::make('term_of_delivery')->label('Term of Delivery'),
-                TextInput::make('delivery_time')->label('Delivery Time'),
-                Select::make('term_of_payment')->label('Term of Payment')
+                TextInput::make('pic')->label('PIC Pemasok'),
+                TextInput::make('term_of_delivery')->label('Syarat Pengiriman'),
+                TextInput::make('delivery_time')->label('Waktu Pengiriman'),
+                Select::make('term_of_payment')->label('Syarat Pembayaran')
                     ->options(fn (): array => TermOfPayment::query()->orderBy('nama_term')->pluck('nama_term', 'nama_term')->all())->searchable(),
                 Textarea::make('catatan')->label('Catatan Tambahan')->rows(3)->columnSpanFull(),
                 Select::make('penawaran_id')->label('Penawaran Sumber')
@@ -78,7 +78,7 @@ class PurchaseOrderForm
                 TextInput::make('customer_id')->hidden()->numeric()->dehydrated(),
             ]),
             Section::make('Item Barang')->schema([
-                Repeater::make('po_items')->relationship()->label('Item Purchase Order')->defaultItems(1)
+                Repeater::make('po_items')->relationship()->label('Rincian Pesanan Pembelian')->defaultItems(1)
                     ->minItems(1)->orderColumn('urutan')->columns(2)
                     ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => self::normalizeItem($data))
                     ->mutateRelationshipDataBeforeSaveUsing(fn (array $data): array => self::normalizeItem($data))
@@ -96,7 +96,7 @@ class PurchaseOrderForm
                             }),
                         TextInput::make('kode_barang')->label('Kode Barang'),
                         TextInput::make('nama_barang')->label('Nama Barang')->required(),
-                        TextInput::make('qty')->label('Qty')->numeric()->minValue(0.01)->default(1)->required()->live(onBlur: true)
+                        TextInput::make('qty')->label('Jumlah')->numeric()->minValue(0.01)->default(1)->required()->live(onBlur: true)
                             ->afterStateUpdated(fn ($state, Get $get, Set $set) => $set('subtotal', round((float) $state * (float) $get('harga_satuan'), 2))),
                         TextInput::make('satuan')->label('Satuan')->default('Pcs')->required(),
                         TextInput::make('harga_satuan')->label('Harga Satuan')->numeric()->minValue(0)->default(0)->required()->live(onBlur: true)

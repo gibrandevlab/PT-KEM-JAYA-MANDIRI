@@ -16,7 +16,7 @@ use Filament\Support\Enums\FontWeight;
 class UserForm
 {
     private const ACCESS_GROUPS = [
-        'Transaksi & History' => ['penawarans', 'purchase_orders', 'surat_jalans', 'invoices'],
+        'Transaksi & Riwayat' => ['penawarans', 'purchase_orders', 'surat_jalans', 'invoices'],
         'Inventory' => ['barangs', 'stock_gudangs', 'kategori_barangs', 'customers', 'vendors', 'customer_addresses', 'customer_pics', 'stok_logs'],
         'Admin' => ['reports', 'bank_accounts', 'term_of_payments', 'users'],
         'Dashboard' => ['dashboard'],
@@ -148,7 +148,7 @@ class UserForm
                 ->schema($rows)
                 ->collapsible()
                 ->collapsed()
-                ->id($group === 'Transaksi & History' ? 'hak-akses' : null)
+                ->id($group === 'Transaksi & Riwayat' ? 'hak-akses' : null)
                 ->columnSpanFull();
         }
 

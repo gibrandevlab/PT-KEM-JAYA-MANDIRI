@@ -14,6 +14,8 @@ class CustomersTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(15)
+            ->paginationPageOptions([15, 30, 50])
             ->columns([
                 TextColumn::make('kode_customer')
                     ->searchable(),
@@ -24,7 +26,7 @@ class CustomersTable
                 TextColumn::make('telepon')
                     ->searchable(),
                 TextColumn::make('email')
-                    ->label('Email address')
+                    ->label('Alamat Email')
                     ->searchable(),
                 TextColumn::make('npwp')
                     ->searchable(),

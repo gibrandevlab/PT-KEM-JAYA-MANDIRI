@@ -14,6 +14,8 @@ class CustomerPicsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(15)
+            ->paginationPageOptions([15, 30, 50])
             ->columns([
                 TextColumn::make('customer_id')
                     ->numeric()
@@ -25,7 +27,7 @@ class CustomerPicsTable
                 TextColumn::make('telepon')
                     ->searchable(),
                 TextColumn::make('email')
-                    ->label('Email address')
+                    ->label('Alamat Email')
                     ->searchable(),
             ])
             ->filters([

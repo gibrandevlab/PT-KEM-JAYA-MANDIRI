@@ -24,7 +24,7 @@ class CustomerInfolist
                 TextEntry::make('telepon')
                     ->placeholder('-'),
                 TextEntry::make('email')
-                    ->label('Email address')
+                    ->label('Alamat Email')
                     ->placeholder('-'),
                 TextEntry::make('npwp')
                     ->placeholder('-'),

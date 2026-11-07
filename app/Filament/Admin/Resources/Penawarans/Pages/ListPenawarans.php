@@ -15,7 +15,7 @@ class ListPenawarans extends ListRecords
     {
         return [
             CreateAction::make()->label('Buat Penawaran')->icon('heroicon-o-plus')->visible(fn (): bool => PenawaranResource::canCreate()),
-            \Filament\Actions\Action::make('history')->label('History')->icon('heroicon-o-clock')->visible(fn (): bool => PenawaranResource::canViewAny())->url(PenawaranResource::getUrl('history')),
+            \Filament\Actions\Action::make('history')->label('Riwayat')->icon('heroicon-o-clock')->visible(fn (): bool => PenawaranResource::canViewAny())->url(PenawaranResource::getUrl('history')),
         ];
     }
 

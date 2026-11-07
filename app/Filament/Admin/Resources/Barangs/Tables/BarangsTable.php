@@ -23,7 +23,9 @@ class BarangsTable
 {
     public static function configure(Table $table): Table
     {
-        return $table->searchable()->searchPlaceholder('Cari nama, kode...')->defaultSort('nama_barang')
+        return $table
+            ->defaultPaginationPageOption(15)
+            ->paginationPageOptions([15, 30, 50])->searchable()->searchPlaceholder('Cari nama, kode...')->defaultSort('nama_barang')
             ->columns([
                 TextColumn::make('kode_barang')->label('Kode')->searchable()->sortable(),
                 TextColumn::make('nama_barang')->label('Nama Barang')->searchable()->sortable()
@@ -40,7 +42,7 @@ class BarangsTable
             ->recordAction(null)
             ->recordActions([
                 ActionGroup::make([
-                    Action::make('history')->label('History Stok')->icon('heroicon-o-clock')->url(fn (Barang $record): string => self::historyUrl($record)),
+                    Action::make('history')->label('Riwayat Stok')->icon('heroicon-o-clock')->url(fn (Barang $record): string => self::historyUrl($record)),
                     EditAction::make()->icon('heroicon-o-pencil-square'),
                     DeleteAction::make()->icon('heroicon-o-trash'),
                 ])->iconButton()->tooltip('Aksi')->visible(fn (): bool => auth()->user()?->hasAccess('barangs', 'update') ?? false),

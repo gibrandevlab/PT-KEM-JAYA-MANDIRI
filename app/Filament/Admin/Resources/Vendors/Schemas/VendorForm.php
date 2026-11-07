@@ -16,8 +16,8 @@ class VendorForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Vendor')->columns(2)->schema([
-                TextInput::make('kode_vendor')->label('Kode Vendor')->default(fn (): string => CreateVendor::nextCode())->readOnly(fn (?Vendor $record): bool => $record === null)->unique(ignoreRecord: true),
+            Section::make('Informasi Pemasok')->columns(2)->schema([
+                TextInput::make('kode_vendor')->label('Kode Pemasok')->default(fn (): string => CreateVendor::nextCode())->readOnly(fn (?Vendor $record): bool => $record === null)->unique(ignoreRecord: true),
                 TextInput::make('nama_perusahaan')->label('Nama Perusahaan')->required(),
                 Textarea::make('alamat')->label('Alamat')->rows(3)->columnSpanFull(),
                 TextInput::make('kota')->label('Kota'),
@@ -25,7 +25,7 @@ class VendorForm
                 TextInput::make('email')->label('Email')->email(),
                 Hidden::make('pic'),
             ]),
-            Section::make('PIC Vendor')->schema([
+            Section::make('PIC Pemasok')->schema([
                 Repeater::make('pic_list')->label('Daftar PIC')->dehydrated(false)->default(fn (?Vendor $record): array => self::parsePics($record?->pic))->defaultItems(1)->columns(2)->schema([
                     TextInput::make('nama')->label('Nama PIC')->required(),
                     TextInput::make('telepon')->label('Telepon PIC')->tel(),

@@ -18,7 +18,7 @@ class ViewSuratJalan extends ViewRecord
         return [
             EditAction::make(),
             Action::make('print')->label('Cetak PDF')->icon('heroicon-o-printer')->url(fn (SuratJalan $record): string => route('surat-jalans.print', $record))->openUrlInNewTab(),
-            Action::make('createInvoice')->label('Buat Invoice dari Surat Jalan')->icon('heroicon-o-receipt-percent')
+            Action::make('createInvoice')->label('Buat Faktur dari Surat Jalan')->icon('heroicon-o-receipt-percent')
                 ->visible(fn (SuratJalan $record): bool => auth()->user()?->role === 'admin' && in_array($record->status, ['dikirim', 'diterima'], true)
                     && (! $record->invoices()->exists()
                         || ($record->invoices()->where('tipe_invoice', 'DP')->exists() && ! $record->invoices()->where('tipe_invoice', 'Pelunasan')->exists())))

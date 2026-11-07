@@ -41,8 +41,8 @@ class StatsOverview extends BaseWidget
                 ->chart([3, 5, 2, 8, 6, 9, max(1, $totalPenawaran)])
                 ->url(PenawaranResource::getUrl()),
 
-            Stat::make('PO Bulan Ini', number_format($totalPO))
-                ->description('Purchase order masuk')
+            Stat::make('Pesanan Pembelian Bulan Ini', number_format($totalPO))
+                ->description('Pesanan pembelian masuk')
                 ->descriptionIcon('heroicon-m-clipboard-document-list')
                 ->color('warning')
                 ->chart([2, 4, 3, 6, 5, 7, max(1, $totalPO)])
@@ -60,15 +60,15 @@ class StatsOverview extends BaseWidget
             $totalInvoice = Invoice::whereMonth('tanggal', $curMonth)->whereYear('tanggal', $curYear)->count();
             $invoiceBelumBayar = Invoice::where('status_payment', 'Unpaid')->count();
 
-            $stats[] = Stat::make('Invoice Bulan Ini', number_format($totalInvoice))
+            $stats[] = Stat::make('Faktur Bulan Ini', number_format($totalInvoice))
                 ->description('Tagihan terbit')
                 ->descriptionIcon('heroicon-m-receipt-percent')
                 ->color('primary')
                 ->chart([2, 5, 3, 6, 7, 5, max(1, $totalInvoice)])
                 ->url(InvoiceResource::getUrl());
 
-            $stats[] = Stat::make('Invoice Belum Bayar', number_format($invoiceBelumBayar))
-                ->description('Status pembayaran Unpaid')
+            $stats[] = Stat::make('Faktur Belum Dibayar', number_format($invoiceBelumBayar))
+                ->description('Status pembayaran belum lunas')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($invoiceBelumBayar > 0 ? 'danger' : 'success')
                 ->chart([1, 2, 4, 3, 5, 2, max(1, $invoiceBelumBayar)])
@@ -76,7 +76,7 @@ class StatsOverview extends BaseWidget
         }
 
         $stats[] = Stat::make('Total Item Barang', number_format($totalBarang))
-            ->description('Master data barang')
+            ->description('Data induk barang')
             ->descriptionIcon('heroicon-m-archive-box')
             ->color('gray')
             ->chart([50, 80, 120, 200, 500, 1000, $totalBarang])

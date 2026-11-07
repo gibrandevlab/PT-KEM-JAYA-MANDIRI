@@ -14,6 +14,8 @@ class CustomerAddressesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(15)
+            ->paginationPageOptions([15, 30, 50])
             ->columns([
                 TextColumn::make('customer_id')
                     ->numeric()

@@ -17,6 +17,7 @@ use Filament\Tables\Table;
 class StockGudangResource extends Resource
 {
     protected static ?string $model = StockGudang::class;
+    protected static ?string $modelLabel = 'stok gudang';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

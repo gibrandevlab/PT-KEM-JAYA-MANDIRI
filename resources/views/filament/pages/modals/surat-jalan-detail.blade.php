@@ -25,7 +25,7 @@
                 <tr>
                     <th class="px-3.5 py-2.5">Kode</th>
                     <th class="px-3.5 py-2.5">Nama Barang</th>
-                    <th class="px-3.5 py-2.5 text-center">Qty Dikirim</th>
+                    <th class="px-3.5 py-2.5 text-center">Jumlah Dikirim</th>
                     <th class="px-3.5 py-2.5">Keterangan</th>
                 </tr>
             </thead>

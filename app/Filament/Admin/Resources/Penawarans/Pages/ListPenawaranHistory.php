@@ -14,9 +14,9 @@ class ListPenawaranHistory extends ListRecords
     use DeletesHistoryRecords;
     protected static string $resource = PenawaranResource::class;
 
-    protected static ?string $title = 'History Penawaran';
+    protected static ?string $title = 'Riwayat Penawaran';
 
-    protected static ?string $breadcrumb = 'History';
+    protected static ?string $breadcrumb = 'Riwayat';
 
     protected function authorizeAccess(): void
     {

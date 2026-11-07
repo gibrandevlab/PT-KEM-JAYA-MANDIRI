@@ -20,6 +20,7 @@ use Filament\Tables\Table;
 class PurchaseOrderResource extends Resource
 {
     protected static ?string $model = PurchaseOrder::class;
+    protected static ?string $modelLabel = 'pesanan pembelian';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

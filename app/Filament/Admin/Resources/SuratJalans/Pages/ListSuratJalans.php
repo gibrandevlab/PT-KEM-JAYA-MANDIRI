@@ -16,7 +16,7 @@ class ListSuratJalans extends ListRecords
     {
         return [
             CreateAction::make(),
-            Action::make('history')->label('History')->icon('heroicon-o-clock')->url(SuratJalanResource::getUrl('history')),
+            Action::make('history')->label('Riwayat')->icon('heroicon-o-clock')->url(SuratJalanResource::getUrl('history')),
         ];
     }
 

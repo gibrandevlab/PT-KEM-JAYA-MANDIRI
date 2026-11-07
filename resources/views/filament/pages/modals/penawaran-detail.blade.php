@@ -1,7 +1,7 @@
 <div class="space-y-4 text-xs">
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-gray-50 dark:bg-gray-800/60 p-3.5 rounded-xl border border-gray-200 dark:border-gray-700">
         <div>
-            <div class="text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400">Customer</div>
+            <div class="text-[10px] font-bold uppercase text-gray-500 dark:text-gray-400">Pelanggan</div>
             <div class="font-semibold text-gray-900 dark:text-white mt-0.5">{{ $record->nama_customer }}</div>
         </div>
         <div>
@@ -25,7 +25,7 @@
                 <tr>
                     <th class="px-3.5 py-2.5">Kode</th>
                     <th class="px-3.5 py-2.5">Nama Barang</th>
-                    <th class="px-3.5 py-2.5 text-center">Qty</th>
+                    <th class="px-3.5 py-2.5 text-center">Jumlah</th>
                     <th class="px-3.5 py-2.5 text-right">Harga</th>
                     <th class="px-3.5 py-2.5 text-right">Subtotal</th>
                 </tr>

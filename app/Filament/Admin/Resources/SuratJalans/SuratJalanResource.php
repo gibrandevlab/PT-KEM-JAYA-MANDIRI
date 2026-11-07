@@ -20,6 +20,7 @@ use Filament\Tables\Table;
 class SuratJalanResource extends Resource
 {
     protected static ?string $model = SuratJalan::class;
+    protected static ?string $modelLabel = 'surat jalan';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

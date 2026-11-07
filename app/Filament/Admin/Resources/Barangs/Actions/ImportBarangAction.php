@@ -18,7 +18,7 @@ class ImportBarangAction
 {
     public static function make(): Action
     {
-        return Action::make('importExcel')->label('Smart Import Excel')->icon('heroicon-o-arrow-up-tray')->color('success')
+        return Action::make('importExcel')->label('Impor Excel')->icon('heroicon-o-arrow-up-tray')->color('success')
             ->visible(fn (): bool => auth()->user()?->hasAccess('barangs', 'create') ?? false)
             ->form([
                 FileUpload::make('file')->label('File Excel (.xlsx)')->acceptedFileTypes(['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'])
@@ -106,7 +106,7 @@ class ImportBarangAction
                     }
                 });
 
-                Notification::make()->title('Import selesai')->body("{$counts['barang']} barang, {$counts['vendor']} vendor, {$counts['po']} PO diproses.")->success()->send();
+                Notification::make()->title('Impor selesai')->body("{$counts['barang']} barang, {$counts['vendor']} pemasok, {$counts['po']} PO diproses.")->success()->send();
             });
     }
 

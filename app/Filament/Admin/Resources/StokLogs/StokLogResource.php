@@ -17,6 +17,7 @@ use Filament\Tables\Table;
 class StokLogResource extends Resource
 {
     protected static ?string $model = StokLog::class;
+    protected static ?string $modelLabel = 'riwayat stok';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
