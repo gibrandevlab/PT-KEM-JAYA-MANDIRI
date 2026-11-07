@@ -5,12 +5,15 @@ namespace App\Filament\Admin\Resources\Penawarans\Pages;
 use App\Filament\Admin\Resources\Penawarans\PenawaranResource;
 use App\Models\Customer;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\DB;
 use Filament\Facades\Filament;
 
 class CreatePenawaran extends CreateRecord
 {
     protected static string $resource = PenawaranResource::class;
+
+    protected Width|string|null $maxContentWidth = Width::Full;
 
     public static function nextNumber(?string $date = null, bool $useSdk = false): string
     {

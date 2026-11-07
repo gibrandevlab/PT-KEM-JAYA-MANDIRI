@@ -26,6 +26,7 @@ use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -34,6 +35,7 @@ use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Illuminate\Support\HtmlString;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -165,6 +167,36 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 //
             ])
+            ->renderHook(
+                PanelsRenderHook::BODY_END,
+                fn (): HtmlString => new HtmlString(<<<'HTML'
+                    <script>
+                        document.addEventListener('click', (event) => {
+                            const link = event.target.closest('a[href]');
+                            if (!link) return;
+
+                            const target = new URL(link.href, window.location.href);
+                            if (target.origin !== window.location.origin) return;
+
+                            if (/^\/admin\/.+\/print\/?$/.test(target.pathname)) {
+                                event.preventDefault();
+                                event.stopImmediatePropagation();
+                                window.open(target.href, 'kjm-print-preview', 'popup=yes,width=1100,height=850,scrollbars=yes,resizable=yes');
+                                return;
+                            }
+
+                            const isCreateForm = /^\/admin\/.+\/create\/?$/.test(window.location.pathname);
+                            const clickedSidebarLink = link.closest('aside, [class*="sidebar"]');
+
+                            if (isCreateForm && clickedSidebarLink && target.pathname.startsWith('/admin/')) {
+                                event.preventDefault();
+                                event.stopImmediatePropagation();
+                                window.open(target.href, '_blank', 'noopener');
+                            }
+                        }, true);
+                    </script>
+                    HTML),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
