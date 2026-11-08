@@ -199,15 +199,6 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): HtmlString => new HtmlString(<<<'HTML'
-                    <style>
-                        .barang-picker-options .fi-fo-checkbox-list-option-ctn{min-width:0;border:1px solid rgb(229 231 235 / .9);border-radius:.625rem;background:rgb(249 250 251 / .75);padding:.55rem .7rem;transition:background-color .15s,border-color .15s}
-                        .barang-picker-options .fi-fo-checkbox-list-option-ctn:hover{border-color:rgb(156 163 175);background:rgb(243 244 246)}
-                        .dark .barang-picker-options .fi-fo-checkbox-list-option-ctn{border-color:rgb(55 65 81);background:rgb(17 24 39 / .55)}
-                        .dark .barang-picker-options .fi-fo-checkbox-list-option-ctn:hover{border-color:rgb(107 114 128);background:rgb(31 41 55)}
-                        .barang-picker-options .fi-fo-checkbox-list-option{align-items:flex-start}
-                        .barang-picker-options:focus-visible{outline:2px solid var(--primary-500);outline-offset:2px}
-                        @media(max-width:767px){.barang-picker-options .fi-fo-checkbox-list-option-ctn{padding:.45rem .55rem}}
-                    </style>
                     <script>
                         (() => {
                             const path = window.location.pathname;

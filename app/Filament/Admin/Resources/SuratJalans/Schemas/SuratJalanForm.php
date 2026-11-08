@@ -77,7 +77,7 @@ class SuratJalanForm
                 Textarea::make('catatan')->label('Catatan')->rows(3)->columnSpanFull(),
             ])->columnSpanFull(),
             Section::make('Rincian Barang')->schema([
-                self::barangPicker('surat_jalan_items', includePrice: false),
+                self::barangPicker('surat_jalan_items', includePrice: false, minimumQuantity: 1),
                 Repeater::make('surat_jalan_items')->relationship()->label('Item Surat Jalan')->defaultItems(1)->minItems(1)->orderColumn('urutan')->columns(['default' => 1, 'md' => 2])
                     ->schema([
                         Select::make('barang_id')->label('Pilih Barang')->options(fn (): array => Barang::query()->orderBy('nama_barang')->get()->mapWithKeys(fn (Barang $item): array => [$item->id => "{$item->kode_barang} — {$item->nama_barang}"])->all())
