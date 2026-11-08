@@ -15,7 +15,7 @@ class LatestSuratJalansTable extends BaseWidget
 
     protected static ?string $heading = 'Surat Jalan Terbaru';
 
-    protected int | string | array $columnSpan = 1;
+    protected int | string | array $columnSpan = ['default' => 1, 'xl' => 2];
 
     public function table(Table $table): Table
     {

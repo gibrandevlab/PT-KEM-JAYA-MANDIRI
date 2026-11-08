@@ -22,10 +22,10 @@ class EditPenawaran extends EditRecord
         $items = is_array($state) ? ($state['penawaran_items'] ?? []) : [];
         $subtotal = collect($items)->sum(fn (array $item): float => (float) ($item['qty'] ?? 0) * (float) ($item['harga_satuan'] ?? 0));
         $discountRate = ($state['enable_diskon'] ?? false) ? (float) ($state['diskon_persen'] ?? 0) : 0.0;
-        $discount = round($subtotal * $discountRate / 100, 2);
+        $discount = round($subtotal * $discountRate / 100);
         $afterDiscount = $subtotal - $discount;
-        $taxRate = ($state['enable_ppn'] ?? false) ? (float) ($state['ppn_persen'] ?? 0) : 0.0;
-        $tax = round($afterDiscount * $taxRate / 100, 2);
+        $taxRate = ($state['enable_ppn'] ?? false) ? 11.0 : 0.0;
+        $tax = round($afterDiscount * $taxRate / 100);
 
         $data['subtotal'] = $subtotal;
         $data['diskon_persen'] = $discountRate;

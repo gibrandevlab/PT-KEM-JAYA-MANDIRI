@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="id"><head><meta charset="utf-8"><title>Surat Jalan {{ str_replace(['/', '\\'], ' ', $suratJalan->no_sj) }}</title><link rel="stylesheet" href="{{ asset('print/document.css') }}"></head>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Surat Jalan {{ str_replace(['/', '\\'], ' ', $suratJalan->no_sj) }}</title><link rel="stylesheet" href="{{ asset('print/document.css') }}"></head>
 <body><div class="no-print"><button onclick="window.print()">Cetak PDF / Print</button><span>Surat Jalan — {{ $suratJalan->no_sj }}</span></div>
 <table class="company-header"><tr><td style="width:40%"><img src="{{ asset('Picture1.png') }}" alt="Logo KJM"></td><td class="company-details"><strong>PT. KEM JAYA MANDIRI</strong>Graha Harapan Regency Blok I5 No.15<br>Babelan - Bekasi 17610<br>Telp. 021-56926318<br>E-mail : support@kemjaya.com</td></tr></table><div class="separator"></div>
 <div class="document-title">SURAT JALAN</div>
@@ -11,4 +11,4 @@
 </tbody></table>
 @if($suratJalan->catatan)<div class="notes"><b>Note:</b><br>{{ $suratJalan->catatan }}</div>@endif
 <table class="sign-row"><tr><td><b>Prepared By</b><div class="sign-space"></div><span class="sign-name">{{ $suratJalan->user?->nama ?: '-' }}</span></td><td><b>Received By</b><div class="sign-space"></div><span class="sign-name">Nama / Tanggal</span></td></tr></table>
-<script>window.addEventListener('load', () => window.print());</script></body></html>
+</body></html>

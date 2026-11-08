@@ -8,6 +8,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Penawaran {{ str_replace(['/', '\\'], ' ', $penawaran->no_penawaran) }}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
@@ -101,6 +102,5 @@
         <tr><td class="terms-label">Term of payment</td><td class="terms-colon">:</td><td>{{ $penawaran->term_of_payment ?: 'Net 30 Days' }}</td></tr>
         <tr><td class="terms-label">Sales condition</td><td class="terms-colon">:</td><td>Consumable</td></tr>
     </table></div>
-    <script>window.onload = () => window.print();</script>
 </body>
 </html>

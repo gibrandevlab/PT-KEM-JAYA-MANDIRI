@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\CustomerAddresses\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -21,7 +22,7 @@ class CustomerAddressesTable
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('label_alamat')
-                    ->searchable(),
+                    ->searchable()->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -30,10 +31,11 @@ class CustomerAddressesTable
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->recordActions([ActionGroup::make([
                 ViewAction::make(),
                 EditAction::make(),
             ])
+                    ->icon('heroicon-m-ellipsis-vertical')->iconButton()->tooltip('Aksi')])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

@@ -5,10 +5,11 @@ namespace App\Filament\Admin\Resources\Invoices\Schemas;
 use App\Filament\Admin\Resources\Invoices\Pages\CreateInvoice;
 use App\Models\BankAccount;
 use App\Models\Barang;
-use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\PurchaseOrder;
 use App\Models\SuratJalan;
+use App\Filament\Admin\Resources\Concerns\HasBarangPicker;
+use App\Filament\Admin\Resources\Concerns\HasCustomerPicker;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -25,10 +26,13 @@ use Filament\Schemas\Schema;
 
 class InvoiceForm
 {
+    use HasBarangPicker;
+    use HasCustomerPicker;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Faktur')->columns(2)->schema([
+            Section::make('Informasi Faktur')->columns(['default' => 1, 'md' => 2, 'xl' => 3])->schema([
                 TextInput::make('no_invoice')->label('Nomor Faktur')->required()->unique(ignoreRecord: true)->default(fn (): string => CreateInvoice::nextNumber()),
                 DatePicker::make('tanggal')->label('Tanggal Faktur')->required()->default(now())->live(),
                 Select::make('tipe_invoice')->label('Jenis Faktur')->options(['Langsung' => 'Pembayaran Penuh', 'DP' => 'Uang Muka', 'Pelunasan' => 'Pelunasan'])->default('Langsung')->required()->live(),
@@ -59,13 +63,8 @@ class InvoiceForm
                         $set('invoice_items', $po->po_items->map(fn ($item): array => self::itemFromReference($item))->all());
                     }),
                 Hidden::make('penawaran_id'),
-                Select::make('customer_id')->label('Pelanggan')->options(fn (): array => Customer::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
-                    ->searchable()->preload()->live()->afterStateUpdated(function ($state, Set $set): void {
-                        $customer = $state ? Customer::query()->find($state) : null;
-                        if (! $customer) return;
-                        $set('nama_customer', $customer->nama_perusahaan); $set('alamat_customer', $customer->alamat);
-                        $set('telepon_customer', $customer->telepon); $set('npwp', $customer->npwp);
-                    }),
+                self::customerPicker(['nama_customer' => 'nama_perusahaan', 'alamat_customer' => 'alamat', 'telepon_customer' => 'telepon', 'npwp' => 'npwp']),
+                Hidden::make('customer_id'),
                 TextInput::make('nama_customer')->label('Nama Pelanggan')->required(),
                 Textarea::make('alamat_customer')->label('Alamat Pelanggan')->rows(3),
                 TextInput::make('telepon_customer')->label('Telepon Pelanggan')->tel(),
@@ -83,8 +82,9 @@ class InvoiceForm
                 Select::make('term_of_payment')->label('Syarat Pembayaran')->options(fn (): array => \App\Models\TermOfPayment::query()->orderBy('nama_term')->pluck('nama_term', 'nama_term')->all())->searchable(),
                 Select::make('bank_account_id')->label('Rekening Bank')->options(fn (): array => BankAccount::query()->where('is_aktif', true)->orderBy('nama_bank')->get()->mapWithKeys(fn (BankAccount $bank): array => [$bank->id => "{$bank->nama_bank} — {$bank->no_rekening} ({$bank->atas_nama})"])->all())->searchable(),
                 Textarea::make('catatan')->label('Catatan')->rows(3)->columnSpanFull(),
-            ]),
+            ])->columnSpanFull(),
             Section::make('Rincian Barang')->schema([
+                self::barangPicker('invoice_items'),
                 Repeater::make('invoice_items')->relationship()->label('Rincian Faktur')->defaultItems(1)->minItems(1)->orderColumn('urutan')->columns(2)
                     ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => self::normalizeItem($data))
                     ->mutateRelationshipDataBeforeSaveUsing(fn (array $data): array => self::normalizeItem($data))
@@ -105,12 +105,12 @@ class InvoiceForm
                         TextInput::make('harga_satuan')->label('Harga Satuan')->numeric()->minValue(0)->default(0)->required()->live(onBlur: true)->afterStateUpdated(fn ($state, Get $get, Set $set) => $set('subtotal', round((float) $state * (float) $get('qty'), 2))),
                         TextInput::make('subtotal')->label('Subtotal Item')->numeric()->readOnly(),
                     ]),
-            ]),
-            Section::make('Perhitungan dan Pembayaran')->columns(2)->schema([
+            ])->columnSpanFull(),
+            Section::make('Perhitungan dan Pembayaran')->columns(['default' => 1, 'md' => 2, 'xl' => 4])->schema([
                 Toggle::make('enable_diskon')->label('Aktifkan Diskon')->dehydrated(false)->default(fn (?Invoice $record): bool => (float) ($record?->diskon_persen ?? 0) > 0)->live(),
                 TextInput::make('diskon_persen')->label('Diskon (%)')->numeric()->minValue(0)->maxValue(100)->default(0)->visible(fn (Get $get): bool => (bool) $get('enable_diskon')),
-                Toggle::make('enable_ppn')->label('Aktifkan PPN')->dehydrated(false)->default(fn (?Invoice $record): bool => (float) ($record?->ppn_persen ?? 0) > 0)->live(),
-                TextInput::make('ppn_persen')->label('PPN (%)')->numeric()->minValue(0)->maxValue(100)->default(11)->visible(fn (Get $get): bool => (bool) $get('enable_ppn')),
+                Toggle::make('enable_ppn')->label('Aktifkan PPN (11%)')->dehydrated(false)->default(fn (?Invoice $record): bool => (float) ($record?->ppn_persen ?? 0) > 0)->live(),
+                Hidden::make('ppn_persen')->default(11),
                 Toggle::make('is_dpp')->label('Hitung DPP'),
                 TextInput::make('dpp_nominal')->label('Nominal DPP')->numeric()->default(0),
                 TextInput::make('dp_persen')->label('DP (%)')->numeric()->default(0)->visible(fn (Get $get): bool => $get('tipe_invoice') === 'DP'),
@@ -121,15 +121,15 @@ class InvoiceForm
                 Placeholder::make('invoice_total_preview')->label('Ringkasan Total')->content(function (Get $get): string {
                     $subtotal = collect($get('invoice_items') ?? [])->sum(fn (array $item): float => (float) ($item['qty'] ?? 0) * (float) ($item['harga_satuan'] ?? 0));
                     $discount = $get('enable_diskon') ? round($subtotal * (float) $get('diskon_persen') / 100, 2) : 0;
-                    $tax = $get('enable_ppn') ? round(($subtotal - $discount) * (float) $get('ppn_persen') / 100, 2) : 0;
+                    $tax = $get('enable_ppn') ? round(($subtotal - $discount) * 0.11, 2) : 0;
                     return 'Subtotal Rp ' . number_format($subtotal, 0, ',', '.') . ' · Diskon Rp ' . number_format($discount, 0, ',', '.') . ' · PPN Rp ' . number_format($tax, 0, ',', '.') . ' · Total Rp ' . number_format($subtotal - $discount + $tax, 0, ',', '.');
                 })->columnSpanFull(),
-            ]),
+            ])->columnSpanFull(),
             Section::make('Lampiran')->schema([
                 Repeater::make('invoice_attachments')->relationship()->label('File Lampiran')->schema([
                     FileUpload::make('file_path')->label('File')->disk('public')->directory('invoice')->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])->maxSize(5120)->storeFileNamesIn('file_name')->required(),
                 ]),
-            ]),
+            ])->columnSpanFull(),
         ]);
     }
 

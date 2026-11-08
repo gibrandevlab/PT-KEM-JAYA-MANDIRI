@@ -3,6 +3,7 @@
 namespace App\Filament\Admin\Resources\Users\Schemas;
 
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
@@ -25,10 +26,10 @@ class UserForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
-            ->columns(2)
+            ->columns(['default' => 1, 'md' => 2, 'xl' => 4])
             ->components([
                 Section::make('Data Pengguna')
-                    ->columns(2)
+                    ->columns(['default' => 1, 'md' => 2, 'xl' => 3])
                     ->schema([
                         TextInput::make('nama')
                             ->required(),
@@ -48,9 +49,16 @@ class UserForm
                                 : null)
                             ->dehydrated(fn (?string $state): bool => filled($state))
                             ->dehydrateStateUsing(fn (string $state): string => bcrypt($state)),
-                        TextInput::make('foto')
-                            ->label('URL Foto')
-                            ->url(),
+                        FileUpload::make('foto')
+                            ->label('Foto Profil')
+                            ->image()
+                            ->avatar()
+                            ->disk('public')
+                            ->directory('profiles')
+                            ->visibility('public')
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                            ->maxSize(1024)
+                            ->helperText('Format JPG, PNG, atau WEBP. Maksimal 1 MB.'),
                         Select::make('role')
                             ->options(['admin' => 'Admin / Finance', 'pekerja' => 'Pekerja'])
                             ->default('pekerja')

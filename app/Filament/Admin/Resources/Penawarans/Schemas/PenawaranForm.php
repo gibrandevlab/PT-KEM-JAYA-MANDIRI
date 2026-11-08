@@ -8,6 +8,7 @@ use App\Models\CustomerAddress;
 use App\Models\CustomerPic;
 use App\Models\Penawaran;
 use App\Models\TermOfPayment;
+use App\Filament\Admin\Resources\Concerns\HasBarangPicker;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -17,6 +18,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Repeater\TableColumn;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -26,11 +28,13 @@ use Illuminate\Support\HtmlString;
 
 class PenawaranForm
 {
+    use HasBarangPicker;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
             Grid::make(['default' => 1, 'xl' => 3])->schema([
-            Section::make('Informasi Penawaran')->columns(2)->schema([
+            Section::make('Informasi Penawaran')->columns(['default' => 1, 'md' => 2])->schema([
                 TextInput::make('no_penawaran')->required()->maxLength(30)->unique(ignoreRecord: true)
                     ->default(fn (): string => \App\Filament\Admin\Resources\Penawarans\Pages\CreatePenawaran::nextNumber())
                     ->columnSpanFull(),
@@ -43,22 +47,47 @@ class PenawaranForm
                     }),
                 DatePicker::make('berlaku_sampai')->label('Berlaku Sampai (Terkunci 1 Minggu)')->default(now()->addWeek())->readOnly(),
                 Select::make('customer_id')
-                    ->label('Pilih Pelanggan (opsional)')
+                    ->label('Pilih dari Master Customer (opsional)')
                     ->options(fn (): array => Customer::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
                     ->searchable()->preload()->live()
                     ->afterStateUpdated(function ($state, Set $set): void {
-                        $customer = $state ? Customer::query()->find($state) : null;
+                        $customer = filled($state) ? Customer::query()->find($state) : null;
+                        $set('alamat_tersimpan', null);
+                        $set('pic_tersimpan', null);
                         if (! $customer) return;
-                        $set('nama_customer', $customer->nama_perusahaan);
-                        $set('alamat_customer', $customer->alamat);
-                        $set('alamat_customer_2', $customer->alamat_gudang);
-                        $set('telepon_customer', $customer->telepon);
-                        $set('up', $customer->pic);
-                        $set('mobile', $customer->pic_phone);
-                        $set('email_up', $customer->pic_email);
-                        $set('npwp_customer', $customer->npwp);
+                        foreach ([
+                            'nama_customer' => $customer->nama_perusahaan,
+                            'alamat_customer' => $customer->alamat,
+                            'alamat_customer_2' => $customer->alamat_gudang,
+                            'telepon_customer' => $customer->telepon,
+                            'up' => $customer->pic,
+                            'mobile' => $customer->pic_phone,
+                            'email_up' => $customer->pic_email,
+                            'npwp_customer' => $customer->npwp,
+                        ] as $field => $value) {
+                            $set($field, $value);
+                        }
                     }),
-                TextInput::make('nama_customer')->label('Nama Perusahaan')->required()->maxLength(150),
+                TextInput::make('nama_customer')->label('Nama Perusahaan')->required()->maxLength(150)->live(onBlur: true)
+                    ->afterStateUpdated(function ($state, Get $get, Set $set): void {
+                        $customer = filled($get('customer_id')) ? Customer::query()->find($get('customer_id')) : null;
+                        if (! $customer || $state === $customer->nama_perusahaan) return;
+
+                        $set('customer_id', null);
+                        foreach ([
+                            'alamat_customer',
+                            'alamat_customer_2',
+                            'telepon_customer',
+                            'up',
+                            'mobile',
+                            'email_up',
+                            'npwp_customer',
+                            'alamat_tersimpan',
+                            'pic_tersimpan',
+                        ] as $field) {
+                            $set($field, null);
+                        }
+                    }),
                 Select::make('alamat_tersimpan')->label('Pilih Alamat Tersimpan')->dehydrated(false)
                     ->options(fn (Get $get): array => CustomerAddress::query()->where('customer_id', $get('customer_id'))
                         ->orderBy('label_alamat')->pluck('label_alamat', 'alamat_lengkap')->all())
@@ -68,22 +97,24 @@ class PenawaranForm
                 Textarea::make('alamat_customer_2')->label('Alamat Gudang')->rows(3),
                 TextInput::make('telepon_customer')->label('Telepon Perusahaan'),
                 TextInput::make('npwp_customer')->label('NPWP'),
-                TextInput::make('up')->label('Nama PIC'),
-                TextInput::make('mobile')->label('Telepon PIC'),
-                TextInput::make('email_up')->label('Email PIC')->email(),
-                Select::make('pic_tersimpan')->label('Pilih PIC Tersimpan')->dehydrated(false)
-                    ->options(fn (Get $get): array => CustomerPic::query()->where('customer_id', $get('customer_id'))
-                        ->where('tipe', 'Customer')->orderBy('nama')->get()
-                        ->mapWithKeys(fn (CustomerPic $pic): array => [$pic->id => $pic->nama . ($pic->telepon ? " ({$pic->telepon})" : '')])->all())
-                    ->visible(fn (Get $get): bool => filled($get('customer_id')))
-                    ->afterStateUpdated(function ($state, Get $get, Set $set): void {
-                        $pic = $state ? CustomerPic::query()->find($state) : null;
-                        if (! $pic || (int) $pic->customer_id !== (int) $get('customer_id')) return;
-                        $set('up', $pic->nama);
-                        $set('mobile', $pic->telepon);
-                        $set('email_up', $pic->email);
-                    }),
-                TextInput::make('com_contact')->label('Kontak Penjualan')->default('Yudhi Syarif'),
+                Fieldset::make('PIC Perusahaan')->columns(['default' => 1, 'md' => 2])->schema([
+                    Select::make('pic_tersimpan')->label('Pilih PIC Tersimpan')->dehydrated(false)
+                        ->options(fn (Get $get): array => CustomerPic::query()->where('customer_id', $get('customer_id'))
+                            ->where('tipe', 'Customer')->orderBy('nama')->get()
+                            ->mapWithKeys(fn (CustomerPic $pic): array => [$pic->id => $pic->nama . ($pic->telepon ? " ({$pic->telepon})" : '')])->all())
+                        ->visible(fn (Get $get): bool => filled($get('customer_id')))
+                        ->afterStateUpdated(function ($state, Get $get, Set $set): void {
+                            $pic = $state ? CustomerPic::query()->find($state) : null;
+                            if (! $pic || (int) $pic->customer_id !== (int) $get('customer_id')) return;
+                            $set('up', $pic->nama);
+                            $set('mobile', $pic->telepon);
+                            $set('email_up', $pic->email);
+                        })->columnSpanFull(),
+                    TextInput::make('up')->label('Nama PIC'),
+                    TextInput::make('mobile')->label('Telepon PIC'),
+                    TextInput::make('email_up')->label('Email PIC')->email(),
+                ])->columnSpanFull(),
+                Select::make('com_contact')->label('Com Contact')->options(['Yudhi Syarif' => 'Yudhi Syarif'])->default('Yudhi Syarif'),
                 Toggle::make('use_sdk')->label('Gunakan Kode SDK')->default(false)->live()
                     ->afterStateUpdated(function ($state, Get $get, Set $set): void {
                         if (! filled($get('tanggal'))) return;
@@ -92,13 +123,22 @@ class PenawaranForm
                         if (! $state && $get('kode_sdk') === 'SDK') $set('kode_sdk', null);
                     }),
                 TextInput::make('kode_sdk')->label('Kode SDK')->placeholder('Masukkan Kode SDK manual'),
-                Textarea::make('perihal')->label('Catatan')->rows(3)->columnSpanFull(),
+                Textarea::make('perihal')->label('Note')->rows(3)->columnSpanFull(),
                 TextInput::make('term_of_delivery')->label('Syarat Pengiriman'),
                 TextInput::make('delivery_time')->label('Waktu Pengiriman'),
                 Select::make('term_of_payment')->label('Syarat Pembayaran')
                     ->options(fn (): array => TermOfPayment::query()->orderBy('nama_term')->pluck('nama_term', 'nama_term')->all())
                     ->searchable(),
                 Textarea::make('catatan')->label('Catatan')->rows(3)->columnSpanFull(),
+                Section::make('Lampiran')->description('PDF, JPG, JPEG, atau PNG; maksimal 5 MB per file.')
+                    ->schema([
+                        Repeater::make('penawaran_attachments')->relationship()->label('File Lampiran')->columns(1)
+                            ->schema([
+                                FileUpload::make('file_path')->label('File')->disk('public')->directory('penawaran')
+                                    ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])->maxSize(5120)
+                                    ->storeFileNamesIn('file_name')->required(),
+                            ]),
+                    ])->columnSpanFull(),
             ])->columnSpan(['default' => 1, 'xl' => 2]),
 
             Section::make('Ringkasan Total')->schema([
@@ -109,19 +149,19 @@ class PenawaranForm
                 Placeholder::make('preview_discount')->label(fn (Get $get): string => 'Diskon (' . (float) ($get('diskon_persen') ?: 0) . '%)')
                     ->content(function (Get $get): string {
                         $subtotal = collect($get('penawaran_items') ?? [])->sum(fn (array $item): float => (float) ($item['qty'] ?? 0) * (float) ($item['harga_satuan'] ?? 0));
-                        return '- Rp ' . number_format($get('enable_diskon') ? round($subtotal * (float) $get('diskon_persen') / 100, 2) : 0, 0, ',', '.');
+                        return '- Rp ' . number_format($get('enable_diskon') ? round($subtotal * (float) $get('diskon_persen') / 100) : 0, 0, ',', '.');
                     })->visible(fn (Get $get): bool => (bool) $get('enable_diskon')),
-                Placeholder::make('preview_tax')->label(fn (Get $get): string => 'PPN (' . (float) ($get('ppn_persen') ?: 0) . '%)')
+                Placeholder::make('preview_tax')->label('PPN (11%)')
                     ->content(function (Get $get): string {
                         $subtotal = collect($get('penawaran_items') ?? [])->sum(fn (array $item): float => (float) ($item['qty'] ?? 0) * (float) ($item['harga_satuan'] ?? 0));
-                        $discount = $get('enable_diskon') ? round($subtotal * (float) $get('diskon_persen') / 100, 2) : 0;
-                        $tax = $get('enable_ppn') ? round(($subtotal - $discount) * (float) $get('ppn_persen') / 100, 2) : 0;
+                        $discount = $get('enable_diskon') ? round($subtotal * (float) $get('diskon_persen') / 100) : 0;
+                        $tax = $get('enable_ppn') ? round(($subtotal - $discount) * 0.11) : 0;
                         return 'Rp ' . number_format($tax, 0, ',', '.');
                     })->visible(fn (Get $get): bool => (bool) $get('enable_ppn')),
                 Placeholder::make('preview_total')->label('Total Penawaran')->content(function (Get $get): HtmlString {
                     $subtotal = collect($get('penawaran_items') ?? [])->sum(fn (array $item): float => (float) ($item['qty'] ?? 0) * (float) ($item['harga_satuan'] ?? 0));
-                    $discount = $get('enable_diskon') ? round($subtotal * (float) $get('diskon_persen') / 100, 2) : 0;
-                    $tax = $get('enable_ppn') ? round(($subtotal - $discount) * (float) $get('ppn_persen') / 100, 2) : 0;
+                    $discount = $get('enable_diskon') ? round($subtotal * (float) $get('diskon_persen') / 100) : 0;
+                    $tax = $get('enable_ppn') ? round(($subtotal - $discount) * 0.11) : 0;
                     $total = number_format($subtotal - $discount + $tax, 0, ',', '.');
                     return new HtmlString('<div style="padding:22px 12px;text-align:center;background:var(--fi-color-gray-50);border-radius:12px;font-size:28px;font-weight:800;color:var(--fi-color-primary-600)">Rp ' . $total . '</div>');
                 }),
@@ -130,15 +170,13 @@ class PenawaranForm
                 TextInput::make('diskon_persen')->label('Diskon (%)')->numeric()->minValue(0)->maxValue(100)->live(onBlur: true)
                     ->default(fn (?Penawaran $record): float => (float) ($record?->diskon_persen ?? 0))
                     ->visible(fn (Get $get): bool => (bool) $get('enable_diskon')),
-                Toggle::make('enable_ppn')->label('Aktifkan PPN')->dehydrated(false)
+                Toggle::make('enable_ppn')->label('Aktifkan PPN (11%)')->dehydrated(false)
                     ->default(fn (?Penawaran $record): bool => (float) ($record?->ppn_persen ?? 0) > 0)->live(),
-                TextInput::make('ppn_persen')->label('PPN (%)')->numeric()->minValue(0)->maxValue(100)->live(onBlur: true)
-                    ->default(fn (?Penawaran $record): float => (float) ($record?->ppn_persen ?? 11))
-                    ->visible(fn (Get $get): bool => (bool) $get('enable_ppn')),
             ])->columnSpan(['default' => 1, 'xl' => 1])
                 ->extraAttributes(['class' => 'xl:sticky xl:top-24 xl:self-start']),
 
             Section::make('Rincian Barang')->schema([
+                self::barangPicker('penawaran_items'),
                 Repeater::make('penawaran_items')->relationship()->label('Item Penawaran')
                     ->defaultItems(1)->minItems(1)->orderColumn('urutan')->compact()
                     ->table([
@@ -178,16 +216,7 @@ class PenawaranForm
                     ]),
             ])->columnSpanFull(),
 
-            Section::make('Lampiran')->description('PDF, JPG, JPEG, atau PNG; maksimal 5 MB per file.')
-                ->schema([
-                    Repeater::make('penawaran_attachments')->relationship()->label('File Lampiran')->columns(1)
-                        ->schema([
-                            FileUpload::make('file_path')->label('File')->disk('public')->directory('penawaran')
-                                ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])->maxSize(5120)
-                                ->storeFileNamesIn('file_name')->required(),
-                        ]),
-                ])->columnSpanFull(),
-            ]),
+            ])->columnSpanFull(),
         ]);
     }
 

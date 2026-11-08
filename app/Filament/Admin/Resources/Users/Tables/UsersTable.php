@@ -24,12 +24,12 @@ class UsersTable
             ->defaultSort('nama')
             ->columns([
                 TextColumn::make('nama')
-                    ->searchable(),
+                    ->searchable()->sortable(),
                 TextColumn::make('email')
                     ->label('Email')
-                    ->searchable(),
+                    ->searchable()->sortable(),
                 TextColumn::make('username')
-                    ->searchable(),
+                    ->searchable()->sortable(),
                 TextColumn::make('role')
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'admin' ? 'Admin / Finance' : 'Pekerja')
@@ -71,7 +71,7 @@ class UsersTable
                         ->requiresConfirmation()
                         ->action(fn ($record) => $record->update(['aktif' => ! $record->aktif]))
                         ->visible(fn ($record): bool => ! $record->is(auth()->user())),
-                ])->iconButton()->tooltip('Aksi'),
+                ])->icon('heroicon-m-ellipsis-vertical')->iconButton()->tooltip('Aksi'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

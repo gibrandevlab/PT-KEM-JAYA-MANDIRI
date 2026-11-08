@@ -1,6 +1,8 @@
 *.log
 .DS_Store
 .env
+.env.local
+.env.*.local
 .env.backup
 .env.production
 .phpactor.json
@@ -13,6 +15,7 @@
 /.vscode
 /.zed
 /auth.json
+/.mcp.json
 /node_modules
 /public/build
 /public/css/filament

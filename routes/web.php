@@ -6,6 +6,7 @@ use App\Http\Controllers\PurchaseOrderPrintController;
 use App\Http\Controllers\SuratJalanPrintController;
 use App\Http\Controllers\InvoicePrintController;
 use App\Http\Controllers\ReportExportController;
+use App\Http\Controllers\ReportPrintController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -29,3 +30,5 @@ Route::get('/admin/invoices/{invoice}/print', InvoicePrintController::class)
     ->middleware('auth')->name('invoices.print');
 Route::get('/admin/reports/export', ReportExportController::class)
     ->middleware('auth')->name('admin.reports.export');
+Route::get('/admin/reports/print', ReportPrintController::class)
+    ->middleware('auth')->name('admin.reports.print');

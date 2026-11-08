@@ -8,11 +8,13 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasName;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Class User
@@ -37,7 +39,7 @@ use Illuminate\Notifications\Notifiable;
  *
  * @package App\Models
  */
-class User extends Authenticatable implements FilamentUser, HasName
+class User extends Authenticatable implements FilamentUser, HasName, HasAvatar
 {
 	use Notifiable;
 
@@ -101,6 +103,21 @@ class User extends Authenticatable implements FilamentUser, HasName
 	public function getFilamentName(): string
 	{
 		return $this->nama ?? $this->username ?? 'User';
+	}
+
+	public function getFilamentAvatarUrl(): ?string
+	{
+		if (! filled($this->foto)) {
+			return null;
+		}
+
+		if (filter_var($this->foto, FILTER_VALIDATE_URL)) {
+			return $this->foto;
+		}
+
+		return Storage::disk('public')->exists($this->foto)
+			? Storage::disk('public')->url($this->foto)
+			: null;
 	}
 
 	public function getNameAttribute(): string

@@ -24,8 +24,8 @@ class EditPurchaseOrder extends EditRecord
         $state = $this->form->getRawState();
         $subtotal = collect($state['po_items'] ?? [])->sum(fn (array $item): float => (float) ($item['qty'] ?? 0) * (float) ($item['harga_satuan'] ?? 0));
         $isLocal = ($data['kategori_po'] ?? $this->record->kategori_po) !== 'Luar Negeri';
-        $taxRate = $isLocal && ($state['enable_ppn'] ?? false) ? (float) ($state['ppn_persen'] ?? 11) : 0.0;
-        $tax = round($subtotal * $taxRate / 100, 2);
+        $taxRate = $isLocal && ($state['enable_ppn'] ?? false) ? 11.0 : 0.0;
+        $tax = round($subtotal * $taxRate / 100);
         $data['jenis'] = $this->record->jenis;
         $data['currency'] = $isLocal ? 'IDR' : ($data['currency'] ?: $this->record->currency ?: 'USD');
         $data['subtotal'] = $subtotal;

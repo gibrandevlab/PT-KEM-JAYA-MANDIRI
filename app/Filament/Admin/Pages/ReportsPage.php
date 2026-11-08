@@ -3,19 +3,22 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Models\Invoice;
+use App\Models\Penawaran;
 use App\Models\PurchaseOrder;
 use App\Models\StokLog;
 use Carbon\Carbon;
 use Filament\Pages\Page;
+use Filament\Support\Enums\Width;
 use Illuminate\Database\Eloquent\Builder;
 
 class ReportsPage extends Page
 {
     protected string $view = 'filament.admin.pages.reports';
     protected static ?string $slug = 'reports';
-    protected static ?string $title = 'Laporan Tahunan';
-    protected static ?string $navigationLabel = 'Laporan Tahunan';
+    protected static ?string $title = 'Laporan';
+    protected static ?string $navigationLabel = 'Laporan';
     protected static bool $shouldRegisterNavigation = false;
+    protected Width | string | null $maxContentWidth = Width::Full;
 
     public static function canAccess(): bool
     {
@@ -25,7 +28,7 @@ class ReportsPage extends Page
     public function getViewData(): array
     {
         $jenis = request()->query('jenis', 'penjualan');
-        if (! in_array($jenis, ['penjualan', 'pembelian', 'stok'], true)) $jenis = 'penjualan';
+        if (! in_array($jenis, ['penjualan', 'penawaran', 'pembelian', 'stok'], true)) $jenis = 'penjualan';
 
         $mode = request()->query('mode', 'tahun');
         if (! in_array($mode, ['tahun', 'bulan', 'rentang', 'bulan_range'], true)) $mode = 'tahun';
@@ -43,7 +46,7 @@ class ReportsPage extends Page
         $count = 0;
 
         if ($jenis === 'penjualan') {
-            $query = Invoice::query()->with('surat_jalan')->where('is_history', false)->whereDate('tanggal', '>=', $from)->whereDate('tanggal', '<=', $to);
+            $query = Invoice::query()->with('surat_jalan')->whereDate('tanggal', '>=', $from)->whereDate('tanggal', '<=', $to);
             if ($search !== '') {
                 $query->where(function (Builder $builder) use ($search): void {
                     $builder->where('no_invoice', 'like', "%{$search}%")
@@ -55,8 +58,18 @@ class ReportsPage extends Page
             $total = (float) (clone $query)->sum('total');
             $paidTotal = (float) (clone $query)->where('status_payment', 'Paid')->sum('total');
             $rows = $query->orderBy('tanggal')->orderBy('id')->paginate(50)->withQueryString();
+        } elseif ($jenis === 'penawaran') {
+            $query = Penawaran::query()->whereDate('tanggal', '>=', $from)->whereDate('tanggal', '<=', $to);
+            if ($search !== '') {
+                $query->where(fn (Builder $builder) => $builder->where('no_penawaran', 'like', "%{$search}%")
+                    ->orWhere('nama_customer', 'like', "%{$search}%")
+                    ->orWhere('perihal', 'like', "%{$search}%"));
+            }
+            $count = (clone $query)->count();
+            $total = (float) (clone $query)->sum('total');
+            $rows = $query->orderBy('tanggal')->orderBy('id')->paginate(50)->withQueryString();
         } elseif ($jenis === 'pembelian') {
-            $query = PurchaseOrder::query()->where('jenis', 'ke_vendor')->where('is_history', false)->whereDate('tanggal', '>=', $from)->whereDate('tanggal', '<=', $to);
+            $query = PurchaseOrder::query()->where('jenis', 'ke_vendor')->whereDate('tanggal', '>=', $from)->whereDate('tanggal', '<=', $to);
             if ($search !== '') $query->where(fn (Builder $builder) => $builder->where('no_po', 'like', "%{$search}%")->orWhere('nama_perusahaan', 'like', "%{$search}%"));
             $count = (clone $query)->count();
             $total = (float) (clone $query)->sum('total');
@@ -74,6 +87,7 @@ class ReportsPage extends Page
         }
 
         $exportUrl = route('admin.reports.export', request()->query());
+        $printUrl = route('admin.reports.print', request()->query());
         return [
             'jenis' => $jenis,
             'mode' => $mode,
@@ -87,6 +101,7 @@ class ReportsPage extends Page
             'total' => $total,
             'paidTotal' => $paidTotal,
             'exportUrl' => $exportUrl,
+            'printUrl' => $printUrl,
             'years' => range(2020, now()->year + 1),
             'months' => [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'],
         ];
@@ -118,7 +133,13 @@ class ReportsPage extends Page
 
     private function validDate(mixed $value): ?string
     {
-        if (! is_string($value) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) return null;
-        try { return Carbon::createFromFormat('!Y-m-d', $value)->toDateString(); } catch (\Throwable) { return null; }
+        if (! is_string($value) || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $value)) {
+            return null;
+        }
+        try {
+            return Carbon::createFromFormat('!Y-m-d', $value)->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
     }
 }

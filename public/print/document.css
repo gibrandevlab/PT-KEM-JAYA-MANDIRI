@@ -33,3 +33,22 @@ body { margin: 0; color: #000; background: #fff; font: 10pt/1.35 Tahoma, Arial, 
 thead { display: table-header-group; }
 tr, .terms, .totals, .notes { page-break-inside: avoid; }
 @media print { .no-print { display: none !important; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+
+@media screen and (max-width: 640px) {
+    body { font-size: 9pt; padding: 10px; }
+    .no-print { flex-wrap: wrap; }
+    .company-header, .company-header tbody, .company-header tr, .company-header td {
+        display: block;
+        width: 100% !important;
+    }
+    .company-details { text-align: left; }
+    .company-details strong { font-size: 14pt; }
+    .meta, .meta tbody, .meta tr, .meta td {
+        display: block;
+        width: 100% !important;
+    }
+    .meta td { padding: 4px 0; }
+    .document-title { font-size: 18pt; }
+    .items th, .items td { padding: 3px 2px; font-size: 8pt; overflow-wrap: anywhere; }
+    .sign-name { min-width: 0; }
+}

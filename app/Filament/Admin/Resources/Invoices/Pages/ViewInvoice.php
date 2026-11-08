@@ -16,7 +16,9 @@ class ViewInvoice extends ViewRecord
     {
         return [
             EditAction::make(),
-            Action::make('print')->label('Cetak PDF')->icon('heroicon-o-printer')->url(fn (Invoice $record): string => route('invoices.print', $record))->openUrlInNewTab(),
+            Action::make('print')->label('Cetak PDF')->icon('heroicon-o-printer')
+                ->modalHeading('Pratinjau Invoice')->modalWidth('7xl')->modalSubmitAction(false)->modalCancelActionLabel('Tutup')
+                ->modalContent(fn (Invoice $record) => view('filament.admin.print-preview', ['url' => route('invoices.print', $record)])),
             Action::make('status')->label('Ubah Status')->icon('heroicon-o-arrow-path')->visible(fn (): bool => auth()->user()?->role === 'admin')
                 ->fillForm(fn (Invoice $record): array => ['status' => $record->status])
                 ->form([\Filament\Forms\Components\Select::make('status')->options(['draft' => 'Draft', 'terkirim' => 'Terkirim', 'dibayar' => 'Dibayar', 'jatuh_tempo' => 'Jatuh Tempo'])->required()])

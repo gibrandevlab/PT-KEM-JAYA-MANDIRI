@@ -27,8 +27,8 @@ class CreatePurchaseOrder extends CreateRecord
         $items = collect($state['po_items'] ?? []);
         $subtotal = $items->sum(fn (array $item): float => (float) ($item['qty'] ?? 0) * (float) ($item['harga_satuan'] ?? 0));
         $isLocal = ($data['kategori_po'] ?? 'Dalam Negeri') !== 'Luar Negeri';
-        $taxRate = $isLocal && ($state['enable_ppn'] ?? false) ? (float) ($state['ppn_persen'] ?? 11) : 0.0;
-        $tax = round($subtotal * $taxRate / 100, 2);
+        $taxRate = $isLocal && ($state['enable_ppn'] ?? false) ? 11.0 : 0.0;
+        $tax = round($subtotal * $taxRate / 100);
         $data['no_po'] = filled($data['no_po'] ?? null) ? $data['no_po'] : self::nextNumber($data['tanggal'] ?? null);
         $data['jenis'] = 'ke_vendor';
         $data['status'] = 'draft';

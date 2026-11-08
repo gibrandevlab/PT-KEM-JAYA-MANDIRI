@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\StokLogs\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Textarea;
 use Filament\Tables\Columns\TextColumn;
@@ -29,11 +30,12 @@ class StokLogsTable
             ->filters([
                 SelectFilter::make('barang_id')->label('Barang')->relationship('barang', 'nama_barang')->searchable()->preload(),
             ])
-            ->recordActions([
+            ->recordActions([ActionGroup::make([
                 EditAction::make()->icon('heroicon-o-pencil-square')->iconButton()->schema([
                     Textarea::make('keterangan')->label('Keterangan')->rows(4)->required(),
                 ])->visible(fn (): bool => auth()->user()?->hasAccess('stok_logs', 'update') ?? false),
             ])
+                    ->icon('heroicon-m-ellipsis-vertical')->iconButton()->tooltip('Aksi')])
             ->toolbarActions([]);
     }
 }

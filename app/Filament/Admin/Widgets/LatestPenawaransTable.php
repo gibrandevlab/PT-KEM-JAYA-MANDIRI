@@ -15,7 +15,7 @@ class LatestPenawaransTable extends BaseWidget
 
     protected static ?string $heading = 'Penawaran Terbaru';
 
-    protected int | string | array $columnSpan = 1;
+    protected int | string | array $columnSpan = ['default' => 1, 'xl' => 2];
 
     public function table(Table $table): Table
     {
@@ -41,16 +41,6 @@ class LatestPenawaransTable extends BaseWidget
                 TextColumn::make('total')
                     ->label('Total')
                     ->money('IDR', locale: 'id'),
-                TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->color(fn (?string $state): string => match ($state) {
-                        'draft' => 'gray',
-                        'terkirim' => 'info',
-                        'disetujui' => 'success',
-                        'ditolak' => 'danger',
-                        default => 'warning',
-                    }),
             ])
             ->recordActions([
                 Action::make('detail')

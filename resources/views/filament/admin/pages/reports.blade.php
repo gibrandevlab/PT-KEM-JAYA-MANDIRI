@@ -4,11 +4,12 @@
     </style>
 
     <div class="report-page">
-    <form method="GET" action="{{ \App\Filament\Admin\Pages\ReportsPage::getUrl() }}" class="report-no-print report-card fi-section">
+    <form method="GET" action="{{ \App\Filament\Admin\Pages\ReportsPage::getUrl() }}" class="report-no-print report-card fi-section" id="report-filter-form">
         <div class="report-toolbar">
             <label class="report-field">Jenis Laporan
                 <select name="jenis">
                     <option value="penjualan" @selected($jenis === 'penjualan')>Laporan Penjualan (Faktur)</option>
+                    <option value="penawaran" @selected($jenis === 'penawaran')>Laporan Penawaran</option>
                     <option value="pembelian" @selected($jenis === 'pembelian')>Laporan Pembelian (Pesanan Pembelian Pemasok)</option>
                     <option value="stok" @selected($jenis === 'stok')>Laporan Pergerakan Stok</option>
                 </select>
@@ -16,7 +17,8 @@
             <label class="report-field">Periode
                 <select name="mode" id="report-mode">
                     <option value="tahun" @selected($mode === 'tahun')>Per tahun</option>
-                    <option value="bulan_range" @selected(in_array($mode, ['bulan', 'bulan_range'], true))>Rentang bulan</option>
+                    <option value="bulan" @selected($mode === 'bulan')>Satu bulan</option>
+                    <option value="bulan_range" @selected($mode === 'bulan_range')>Rentang bulan</option>
                     <option value="rentang" @selected($mode === 'rentang')>Rentang tanggal</option>
                 </select>
             </label>
@@ -27,6 +29,9 @@
             </label>
             <label class="report-month report-field">Dari bulan
                 <select name="bulan_dari">@foreach($months as $monthNumber => $monthName)<option value="{{ $monthNumber }}" @selected((int)request('bulan_dari', 1) === $monthNumber)>{{ $monthName }}</option>@endforeach</select>
+            </label>
+            <label class="report-single-month report-field">Bulan
+                <select name="bulan">@foreach($months as $monthNumber => $monthName)<option value="{{ $monthNumber }}" @selected($bulan === $monthNumber)>{{ $monthName }}</option>@endforeach</select>
             </label>
             <label class="report-month report-field">Sampai bulan
                 <select name="bulan_sampai">@foreach($months as $monthNumber => $monthName)<option value="{{ $monthNumber }}" @selected((int)request('bulan_sampai', 12) === $monthNumber)>{{ $monthName }}</option>@endforeach</select>
@@ -44,14 +49,14 @@
         <div class="report-actions">
             <button type="submit" class="fi-btn fi-btn-color-primary">Tampilkan</button>
             <a href="{{ $exportUrl }}" class="fi-btn fi-btn-color-gray"><x-filament::icon icon="heroicon-o-arrow-down-tray" class="h-4 w-4" /> Ekspor Excel</a>
-            <button type="button" onclick="window.print()" class="fi-btn fi-btn-color-gray"><x-filament::icon icon="heroicon-o-printer" class="h-4 w-4" /> Cetak</button>
+            <a href="{{ $printUrl }}" target="_blank" rel="noopener" class="fi-btn fi-btn-color-gray"><x-filament::icon icon="heroicon-o-printer" class="h-4 w-4" /> Cetak PDF</a>
         </div>
     </form>
 
     <section class="fi-section report-card rounded-xl bg-white shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 p-6" id="report-content">
         <div class="mb-4 flex flex-wrap items-start justify-between gap-3 border-b border-gray-200 pb-4 dark:border-white/10">
             <div>
-                <h2 class="text-xl font-bold">{{ ['penjualan' => 'Laporan Penjualan', 'pembelian' => 'Laporan Pembelian Pemasok', 'stok' => 'Laporan Pergerakan Stok'][$jenis] }}</h2>
+                <h2 class="text-xl font-bold">{{ ['penjualan' => 'Laporan Penjualan', 'penawaran' => 'Laporan Penawaran', 'pembelian' => 'Laporan Pembelian Pemasok', 'stok' => 'Laporan Pergerakan Stok'][$jenis] }}</h2>
                 <p class="mt-1 text-sm text-gray-500">Periode {{ \Carbon\Carbon::parse($dari)->format('d/m/Y') }} — {{ \Carbon\Carbon::parse($sampai)->format('d/m/Y') }}</p>
             </div>
             <div class="text-sm text-gray-500">{{ number_format($count) }} data</div>
@@ -69,6 +74,16 @@
                 @forelse($rows as $invoice)
                     <tr class="border-b border-gray-100 dark:border-white/5"><td class="p-3">{{ $invoice->tanggal?->format('d/m/Y') }}</td><td class="p-3 font-semibold">{{ $invoice->no_invoice }}</td><td class="p-3">{{ $invoice->nama_customer }}</td><td class="p-3">{{ $invoice->surat_jalan?->no_sj ?: '-' }}</td><td class="p-3"><span class="report-badge report-badge-{{ strtolower($invoice->status_payment ?: 'unpaid') }}">{{ $invoice->status_payment === 'Paid' ? 'Lunas' : ($invoice->status_payment === 'Unpaid' ? 'Belum Dibayar' : 'Belum Dibayar') }}</span></td><td class="p-3 text-right">Rp {{ number_format((float) $invoice->total, 0, ',', '.') }}</td><td class="p-3"><a title="Lihat rincian faktur" href="{{ \App\Filament\Admin\Resources\Invoices\InvoiceResource::getUrl('view', ['record' => $invoice]) }}"><x-filament::icon icon="heroicon-o-eye" class="h-5 w-5" /></a></td></tr>
                 @empty<tr><td colspan="7" class="p-10 text-center text-gray-500">Tidak ada faktur pada periode ini.</td></tr>@endforelse
+                </tbody>
+            </table></div>
+        @elseif($jenis === 'penawaran')
+            <div class="report-stat-grid"><div class="report-stat"><div class="report-stat-label">Total penawaran</div><div class="report-stat-value">Rp {{ number_format($total, 0, ',', '.') }}</div></div><div class="report-stat"><div class="report-stat-label">Jumlah penawaran</div><div class="report-stat-value">{{ number_format($count) }}</div></div></div>
+            <div class="report-scroll"><table class="report-table">
+                <thead><tr><th>Tanggal</th><th>Nomor Penawaran</th><th>Customer</th><th>Perihal</th><th>Status</th><th class="numeric">Total</th></tr></thead>
+                <tbody>
+                @forelse($rows as $offer)
+                    <tr><td>{{ $offer->tanggal?->format('d/m/Y') }}</td><td class="font-semibold">{{ $offer->no_penawaran }}</td><td>{{ $offer->nama_customer }}</td><td>{{ $offer->perihal ?: '-' }}</td><td>{{ ucfirst($offer->status) }}</td><td class="numeric">Rp {{ number_format((float) $offer->total, 0, ',', '.') }}</td></tr>
+                @empty<tr><td colspan="6" class="report-empty">Tidak ada penawaran pada periode ini.</td></tr>@endforelse
                 </tbody>
             </table></div>
         @elseif($jenis === 'pembelian')
@@ -101,10 +116,14 @@
             const mode = document.getElementById('report-mode');
             const update = () => {
                 document.querySelectorAll('.report-month').forEach(el => el.style.display = mode.value === 'bulan_range' ? '' : 'none');
+                document.querySelectorAll('.report-single-month').forEach(el => el.style.display = mode.value === 'bulan' ? '' : 'none');
                 document.querySelectorAll('.report-range').forEach(el => el.style.display = mode.value === 'rentang' ? '' : 'none');
                 document.querySelectorAll('.report-year').forEach(el => el.style.display = mode.value === 'rentang' ? 'none' : '');
             };
-            mode.addEventListener('change', update); update();
+            const form = document.getElementById('report-filter-form');
+            mode.addEventListener('change', update);
+            form.querySelectorAll('select').forEach(select => select.addEventListener('change', () => form.requestSubmit()));
+            update();
         })();
     </script>
 </x-filament-panels::page>

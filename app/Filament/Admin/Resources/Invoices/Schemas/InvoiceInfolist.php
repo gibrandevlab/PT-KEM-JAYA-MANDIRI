@@ -2,15 +2,21 @@
 
 namespace App\Filament\Admin\Resources\Invoices\Schemas;
 
+use App\Filament\Admin\Resources\Concerns\HasAttachmentPreview;
+use App\Models\Invoice;
 use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Schema;
 
 class InvoiceInfolist
 {
+    use HasAttachmentPreview;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->columns(['default' => 1, 'md' => 2, 'xl' => 4])
             ->components([
                 TextEntry::make('no_invoice'),
                 TextEntry::make('tanggal')
@@ -112,6 +118,16 @@ class InvoiceInfolist
                 TextEntry::make('tanggal_kirim_dokumen')
                     ->date()
                     ->placeholder('-'),
+                RepeatableEntry::make('invoice_attachments')
+                    ->label('Lampiran')
+                    ->schema([
+                        TextEntry::make('file_name')
+                            ->label('Nama File')
+                            ->icon('heroicon-o-document-arrow-down')
+                            ->belowContent([self::attachmentPreviewAction()]),
+                    ])
+                    ->columnSpanFull()
+                    ->visible(fn (Invoice $record): bool => $record->invoice_attachments()->exists()),
             ]);
     }
 }

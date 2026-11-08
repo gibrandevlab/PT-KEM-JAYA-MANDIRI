@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\CustomerPics\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -21,22 +22,23 @@ class CustomerPicsTable
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('tipe')
-                    ->searchable(),
+                    ->searchable()->sortable(),
                 TextColumn::make('nama')
-                    ->searchable(),
+                    ->searchable()->sortable(),
                 TextColumn::make('telepon')
-                    ->searchable(),
+                    ->searchable()->sortable(),
                 TextColumn::make('email')
                     ->label('Alamat Email')
-                    ->searchable(),
+                    ->searchable()->sortable(),
             ])
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->recordActions([ActionGroup::make([
                 ViewAction::make(),
                 EditAction::make(),
             ])
+                    ->icon('heroicon-m-ellipsis-vertical')->iconButton()->tooltip('Aksi')])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

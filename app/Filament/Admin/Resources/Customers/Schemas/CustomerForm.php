@@ -15,7 +15,7 @@ class CustomerForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Perusahaan')->columns(2)->schema([
+            Section::make('Informasi Perusahaan')->columns(['default' => 1, 'md' => 2, 'xl' => 3])->schema([
                 TextInput::make('kode_customer')->label('Kode Pelanggan')->required()->unique(ignoreRecord: true)->default(fn (): string => \App\Filament\Admin\Resources\Customers\Pages\CreateCustomer::nextCode())->readOnly(fn (?Customer $record): bool => $record === null),
                 TextInput::make('nama_perusahaan')->label('Nama Perusahaan')->required(),
                 Repeater::make('customer_addresses_form')->label('Alamat Perusahaan')->dehydrated(false)->default(fn (?Customer $record): array => self::addresses($record?->alamat))->defaultItems(1)->columns(1)->schema([
@@ -30,22 +30,22 @@ class CustomerForm
                 TextInput::make('telepon')->label('Telepon')->tel(),
                 TextInput::make('email')->label('Email')->email(),
                 TextInput::make('npwp')->label('NPWP'),
-            ]),
-            Section::make('PIC Pelanggan')->columns(2)->schema([
+            ])->columnSpanFull(),
+            Section::make('PIC Pelanggan')->columns(['default' => 1, 'md' => 2, 'xl' => 3])->schema([
                 TextInput::make('pic')->label('PIC Utama'),
                 TextInput::make('pic_phone')->label('Telepon PIC')->tel(),
                 TextInput::make('pic_email')->label('Email PIC')->email(),
                 Repeater::make('additional_customer_pics')->label('PIC Pelanggan Lain')->dehydrated(false)->default(fn (?Customer $record): array => $record?->customer_pics()->where('tipe', 'Customer')->where('nama', '!=', $record->pic)->get()->map(fn ($pic): array => ['nama' => $pic->nama, 'telepon' => $pic->telepon, 'email' => $pic->email])->all() ?? [])->schema([
                     TextInput::make('nama')->label('Nama')->required(), TextInput::make('telepon')->label('Telepon')->tel(), TextInput::make('email')->label('Email')->email(),
                 ])->columns(3)->columnSpanFull(),
-            ]),
-            Section::make('PIC Gudang')->columns(2)->schema([
+            ])->columnSpanFull(),
+            Section::make('PIC Gudang')->columns(['default' => 1, 'md' => 2, 'xl' => 3])->schema([
                 TextInput::make('pic_gudang')->label('PIC Gudang Utama'),
                 TextInput::make('pic_gudang_phone')->label('Telepon PIC Gudang')->tel(),
                 Repeater::make('additional_warehouse_pics')->label('PIC Gudang Lain')->dehydrated(false)->default(fn (?Customer $record): array => $record?->customer_pics()->where('tipe', 'Gudang')->where('nama', '!=', $record->pic_gudang)->get()->map(fn ($pic): array => ['nama' => $pic->nama, 'telepon' => $pic->telepon])->all() ?? [])->schema([
                     TextInput::make('nama')->label('Nama')->required(), TextInput::make('telepon')->label('Telepon')->tel(),
                 ])->columns(2)->columnSpanFull(),
-            ]),
+            ])->columnSpanFull(),
         ]);
     }
 

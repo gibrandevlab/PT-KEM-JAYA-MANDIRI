@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\TermOfPayments\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -18,7 +19,7 @@ class TermOfPaymentsTable
             ->paginationPageOptions([15, 30, 50])
             ->columns([
                 TextColumn::make('nama_term')
-                    ->searchable(),
+                    ->searchable()->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -27,10 +28,11 @@ class TermOfPaymentsTable
             ->filters([
                 //
             ])
-            ->recordActions([
+            ->recordActions([ActionGroup::make([
                 ViewAction::make(),
                 EditAction::make(),
             ])
+                    ->icon('heroicon-m-ellipsis-vertical')->iconButton()->tooltip('Aksi')])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make(),

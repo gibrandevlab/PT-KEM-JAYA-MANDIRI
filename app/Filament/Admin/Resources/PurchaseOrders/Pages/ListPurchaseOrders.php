@@ -15,7 +15,7 @@ class ListPurchaseOrders extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()->label('Buat PO Baru')->icon('heroicon-o-plus'),
             Action::make('history')->label('Riwayat')->icon('heroicon-o-clock')->url(PurchaseOrderResource::getUrl('history')),
         ];
     }

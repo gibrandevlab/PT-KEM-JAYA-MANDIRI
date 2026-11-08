@@ -19,7 +19,7 @@ class EditInvoice extends EditRecord
         $subtotal = collect($state['invoice_items'] ?? [])->sum(fn (array $item): float => (float) ($item['qty'] ?? 0) * (float) ($item['harga_satuan'] ?? 0));
         $discountRate = ($state['enable_diskon'] ?? false) ? (float) ($data['diskon_persen'] ?? 0) : 0.0;
         $discount = round($subtotal * $discountRate / 100, 2);
-        $taxRate = ($state['enable_ppn'] ?? false) ? (float) ($data['ppn_persen'] ?? 0) : 0.0;
+        $taxRate = ($state['enable_ppn'] ?? false) ? 11.0 : 0.0;
         $tax = round(($subtotal - $discount) * $taxRate / 100, 2);
         $data['subtotal'] = $subtotal;
         $data['diskon_persen'] = $discountRate;

@@ -4,8 +4,6 @@ namespace App\Filament\Admin\Resources\Penawarans\Pages;
 
 use App\Filament\Admin\Resources\Penawarans\PenawaranResource;
 use App\Filament\Admin\Resources\Concerns\DeletesHistoryRecords;
-use Filament\Actions\Action;
-use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -26,17 +24,13 @@ class ListPenawaranHistory extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Buat Penawaran')->icon('heroicon-o-plus')->visible(fn (): bool => PenawaranResource::canCreate()),
-            Action::make('back')->label('Kembali ke Penawaran')->icon('heroicon-o-arrow-left')->url(PenawaranResource::getUrl('index')),
             $this->deleteAllHistoryAction('penawarans'),
         ];
     }
 
     protected function getTableQuery(): Builder
     {
-        return PenawaranResource::getEloquentQuery()->with('user')->where(function (Builder $query): void {
-            $query->where('is_history', true)->orWhere('status', 'selesai');
-        });
+        return PenawaranResource::getEloquentQuery()->with('user')->where('is_history', true);
     }
 
 }

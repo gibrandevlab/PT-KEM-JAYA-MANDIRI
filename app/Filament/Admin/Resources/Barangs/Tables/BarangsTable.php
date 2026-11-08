@@ -31,7 +31,7 @@ class BarangsTable
                 TextColumn::make('nama_barang')->label('Nama Barang')->searchable()->sortable()
                     ->url(fn (Barang $record): string => self::historyUrl($record)),
                 TextColumn::make('kategori_barang.nama_kategori')->label('Kategori')->badge()->searchable()->sortable(),
-                TextColumn::make('satuan')->label('Satuan'),
+                TextColumn::make('satuan')->label('Satuan')->sortable(),
                 TextColumn::make('tahun')->label('Tahun')->sortable(),
                 TextColumn::make('harga_satuan')->label('Harga Satuan')->money('IDR')->sortable(),
             ])
@@ -45,7 +45,7 @@ class BarangsTable
                     Action::make('history')->label('Riwayat Stok')->icon('heroicon-o-clock')->url(fn (Barang $record): string => self::historyUrl($record)),
                     EditAction::make()->icon('heroicon-o-pencil-square'),
                     DeleteAction::make()->icon('heroicon-o-trash'),
-                ])->iconButton()->tooltip('Aksi')->visible(fn (): bool => auth()->user()?->hasAccess('barangs', 'update') ?? false),
+                ])->icon('heroicon-m-ellipsis-vertical')->iconButton()->tooltip('Aksi')->visible(fn (): bool => auth()->user()?->hasAccess('barangs', 'update') ?? false),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -8,6 +8,7 @@ use App\Models\Penawaran;
 use App\Models\PurchaseOrder;
 use App\Models\TermOfPayment;
 use App\Models\Vendor;
+use App\Filament\Admin\Resources\Concerns\HasBarangPicker;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Placeholder;
@@ -23,30 +24,62 @@ use Filament\Schemas\Schema;
 
 class PurchaseOrderForm
 {
+    use HasBarangPicker;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Pesanan Pembelian')->columns(2)->schema([
+            Section::make('Informasi Pesanan Pembelian')->columns(['default' => 1, 'md' => 2, 'xl' => 3])->schema([
                 TextInput::make('no_po')->label('No. PO')->required()->maxLength(30)->unique(ignoreRecord: true)
-                    ->default(fn (): string => CreatePurchaseOrder::nextNumber()),
+                    ->default(fn (): string => CreatePurchaseOrder::nextNumber())
+                    ->visible(fn (?PurchaseOrder $record): bool => $record === null),
                 TextInput::make('no_po_customer')->label('Referensi Anda'),
-                DatePicker::make('tanggal')->label('Tanggal PO')->required()->default(now())->live(),
+                DatePicker::make('tanggal')->label('Tanggal PO')->required()->default(now())->live()
+                    ->afterStateUpdated(function ($state, Set $set, ?PurchaseOrder $record): void {
+                        if ($record === null && filled($state)) {
+                            $set('no_po', CreatePurchaseOrder::nextNumber($state));
+                        }
+                    }),
                 DatePicker::make('tanggal_kirim')->label('Tanggal Kirim'),
                 TextInput::make('jenis')->hidden()->default('ke_vendor')->dehydrated(),
                 Select::make('kategori_po')->label('Kategori PO')->options(['Dalam Negeri' => 'Dalam Negeri', 'Luar Negeri' => 'Luar Negeri'])
-                    ->default('Dalam Negeri')->required()->live(),
+                    ->default('Dalam Negeri')->required()->live()
+                    ->afterStateUpdated(function ($state, Set $set, Get $get): void {
+                        if ($state === 'Luar Negeri') {
+                            if (in_array($get('currency'), ['IDR', 'Rp', null, ''], true)) {
+                                $set('currency', 'USD');
+                            }
+                            $set('enable_ppn', false);
+                            $set('ppn_persen', 0);
+                            return;
+                        }
+
+                        $set('currency', 'IDR');
+                        $set('enable_ppn', false);
+                        $set('ppn_persen', 0);
+                    }),
                 TextInput::make('currency')->label('Mata Uang')->default('IDR')->required()
                     ->visible(fn (Get $get): bool => $get('kategori_po') === 'Luar Negeri'),
-                Select::make('vendor_id')->label('Pilih Pemasok')->options(fn (): array => Vendor::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
+                Select::make('vendor_id')->label('Pilih dari Master Vendor (opsional)')
+                    ->options(fn (): array => Vendor::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
                     ->searchable()->preload()->live()->afterStateUpdated(function ($state, Set $set): void {
-                        $vendor = $state ? Vendor::query()->find($state) : null;
+                        $vendor = filled($state) ? Vendor::query()->find($state) : null;
                         if (! $vendor) return;
                         $set('nama_perusahaan', $vendor->nama_perusahaan);
                         $set('alamat', $vendor->alamat);
                         $set('telepon', $vendor->telepon);
                         $set('pic', $vendor->pic);
                     }),
-                TextInput::make('nama_perusahaan')->label('Nama Perusahaan')->required()->maxLength(150),
+                TextInput::make('nama_perusahaan')->label('Nama Perusahaan')->required()->maxLength(150)->live(onBlur: true)
+                    ->afterStateUpdated(function ($state, Get $get, Set $set): void {
+                        $vendor = filled($get('vendor_id')) ? Vendor::query()->find($get('vendor_id')) : null;
+                        if (! $vendor || $state === $vendor->nama_perusahaan) return;
+
+                        $set('vendor_id', null);
+                        $set('alamat', null);
+                        $set('telepon', null);
+                        $set('pic', null);
+                    }),
                 Textarea::make('alamat')->label('Alamat')->rows(3),
                 TextInput::make('telepon')->label('Telepon'),
                 TextInput::make('pic')->label('PIC Pemasok'),
@@ -62,6 +95,7 @@ class PurchaseOrderForm
                         $offer = $state ? Penawaran::query()->with('penawaran_items')->find($state) : null;
                         if (! $offer) return;
                         $set('nama_perusahaan', $offer->nama_customer);
+                        $set('vendor_id', null);
                         $set('alamat', $offer->alamat_customer);
                         $set('telepon', $offer->telepon_customer);
                         $set('customer_id', $offer->customer_id);
@@ -76,10 +110,11 @@ class PurchaseOrderForm
                         ])->all());
                     }),
                 TextInput::make('customer_id')->hidden()->numeric()->dehydrated(),
-            ]),
+            ])->columnSpanFull(),
             Section::make('Item Barang')->schema([
+                self::barangPicker('po_items', usePurchasePrice: true),
                 Repeater::make('po_items')->relationship()->label('Rincian Pesanan Pembelian')->defaultItems(1)
-                    ->minItems(1)->orderColumn('urutan')->columns(2)
+                    ->minItems(1)->orderColumn('urutan')->columns(['default' => 1, 'md' => 2])
                     ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => self::normalizeItem($data))
                     ->mutateRelationshipDataBeforeSaveUsing(fn (array $data): array => self::normalizeItem($data))
                     ->schema([
@@ -104,26 +139,29 @@ class PurchaseOrderForm
                         TextInput::make('deskripsi')->label('Deskripsi')->columnSpanFull(),
                         TextInput::make('subtotal')->label('Total Harga')->numeric()->minValue(0)->readOnly(),
                     ]),
-            ]),
-            Section::make('Ringkasan Harga')->columns(2)->schema([
-                Toggle::make('enable_ppn')->label('Aktifkan PPN 11%')->dehydrated(false)
-                    ->default(fn (?PurchaseOrder $record): bool => (float) ($record?->ppn_persen ?? 0) > 0)->live(),
-                TextInput::make('ppn_persen')->label('PPN (%)')->numeric()->minValue(0)->maxValue(100)
-                    ->default(fn (?PurchaseOrder $record): float => (float) ($record?->ppn_persen ?? 0))
-                    ->visible(fn (Get $get): bool => $get('kategori_po') !== 'Luar Negeri' && (bool) $get('enable_ppn')),
+            ])->columnSpanFull(),
+            Section::make('Ringkasan Harga')->columns(['default' => 1, 'md' => 2, 'xl' => 3])->schema([
+                Toggle::make('enable_ppn')->label('Aktifkan PPN (11%)')->dehydrated(false)
+                    ->default(fn (?PurchaseOrder $record): bool => (float) ($record?->ppn_persen ?? 0) > 0)->live()
+                    ->visible(fn (Get $get): bool => $get('kategori_po') !== 'Luar Negeri'),
                 Placeholder::make('po_total_preview')->label('Ringkasan Total')->content(function (Get $get): string {
                     $subtotal = collect($get('po_items') ?? [])->sum(fn (array $item): float => (float) ($item['qty'] ?? 0) * (float) ($item['harga_satuan'] ?? 0));
-                    $ppn = $get('kategori_po') !== 'Luar Negeri' && $get('enable_ppn') ? round($subtotal * (float) $get('ppn_persen') / 100, 2) : 0;
+                    $ppn = $get('kategori_po') !== 'Luar Negeri' && $get('enable_ppn') ? round($subtotal * 0.11) : 0;
                     $currency = $get('kategori_po') === 'Luar Negeri' ? ($get('currency') ?: 'USD') : 'Rp';
-                    return "Subtotal {$currency} " . number_format($subtotal, 0, ',', '.') . " · PPN {$currency} " . number_format($ppn, 0, ',', '.') . " · Total {$currency} " . number_format($subtotal + $ppn, 0, ',', '.');
+                    $summary = "Subtotal {$currency} " . number_format($subtotal, 0, ',', '.');
+                    if ($get('kategori_po') !== 'Luar Negeri') {
+                        $summary .= " · PPN {$currency} " . number_format($ppn, 0, ',', '.');
+                    }
+
+                    return $summary . " · Total {$currency} " . number_format($subtotal + $ppn, 0, ',', '.');
                 })->columnSpanFull(),
-            ]),
+            ])->columnSpanFull(),
             Section::make('Lampiran')->description('PDF, JPG, JPEG, PNG; maksimal 5 MB per file.')->schema([
                 Repeater::make('po_attachments')->relationship()->label('Lampiran PO')->columns(1)
                     ->schema([FileUpload::make('file_path')->label('File')->disk('public')->directory('po')
                         ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])->maxSize(5120)
                         ->storeFileNamesIn('file_name')->required()]),
-            ]),
+            ])->columnSpanFull(),
         ]);
     }
 

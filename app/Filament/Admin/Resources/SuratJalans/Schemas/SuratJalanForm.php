@@ -8,7 +8,10 @@ use App\Models\Customer;
 use App\Models\Penawaran;
 use App\Models\PurchaseOrder;
 use App\Models\SuratJalan;
+use App\Filament\Admin\Resources\Concerns\HasBarangPicker;
+use App\Filament\Admin\Resources\Concerns\HasCustomerPicker;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -19,10 +22,13 @@ use Filament\Schemas\Schema;
 
 class SuratJalanForm
 {
+    use HasBarangPicker;
+    use HasCustomerPicker;
+
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Pengiriman')->description('Pilih referensi, pelanggan, alamat tujuan, dan PIC penerima.')->columns(2)->schema([
+            Section::make('Informasi Pengiriman')->description('Pilih referensi, pelanggan, alamat tujuan, dan PIC penerima.')->columns(['default' => 1, 'md' => 2, 'xl' => 3])->schema([
                 TextInput::make('no_sj')->label('No. SJ')->required()->unique(ignoreRecord: true)->default(fn (): string => CreateSuratJalan::nextNumber()),
                 DatePicker::make('tanggal')->label('Tanggal SJ')->required()->default(now()),
                 Select::make('po_id')->label('Referensi Pesanan Pembelian')->options(fn (): array => PurchaseOrder::query()->whereIn('status', ['diproses', 'selesai'])->orderByDesc('created_at')->pluck('no_po', 'id')->all())
@@ -58,15 +64,8 @@ class SuratJalanForm
                             'nama_barang' => $item->nama_barang, 'satuan' => $item->satuan, 'qty' => $item->qty,
                         ])->all());
                     }),
-                Select::make('customer_id')->label('Perusahaan Pelanggan')->options(fn (): array => Customer::query()->orderBy('nama_perusahaan')->pluck('nama_perusahaan', 'id')->all())
-                    ->searchable()->preload()->live()->afterStateUpdated(function ($state, Set $set): void {
-                        $customer = $state ? Customer::query()->find($state) : null;
-                        if (! $customer) return;
-                        $set('nama_penerima', $customer->nama_perusahaan);
-                        $set('alamat_pengiriman', $customer->alamat_gudang ?: $customer->alamat);
-                        $set('telepon_penerima', $customer->pic_gudang_phone ?: $customer->telepon);
-                        $set('pic_penerima', $customer->pic_gudang ?: $customer->pic);
-                    }),
+                self::customerPicker(['nama_penerima' => 'nama_perusahaan', 'alamat_pengiriman' => ['alamat_gudang', 'alamat'], 'telepon_penerima' => ['pic_gudang_phone', 'telepon'], 'pic_penerima' => ['pic_gudang', 'pic']]),
+                Hidden::make('customer_id'),
                 TextInput::make('nama_penerima')->label('Nama Penerima')->required(),
                 Textarea::make('alamat_pengiriman')->label('Alamat Pengiriman')->required()->rows(3),
                 TextInput::make('kota_tujuan')->label('Kota Tujuan'),
@@ -76,9 +75,10 @@ class SuratJalanForm
                 TextInput::make('kendaraan')->label('Kendaraan'),
                 TextInput::make('no_polisi')->label('Nomor Polisi'),
                 Textarea::make('catatan')->label('Catatan')->rows(3)->columnSpanFull(),
-            ]),
+            ])->columnSpanFull(),
             Section::make('Rincian Barang')->schema([
-                Repeater::make('surat_jalan_items')->relationship()->label('Item Surat Jalan')->defaultItems(1)->minItems(1)->orderColumn('urutan')->columns(2)
+                self::barangPicker('surat_jalan_items', includePrice: false),
+                Repeater::make('surat_jalan_items')->relationship()->label('Item Surat Jalan')->defaultItems(1)->minItems(1)->orderColumn('urutan')->columns(['default' => 1, 'md' => 2])
                     ->schema([
                         Select::make('barang_id')->label('Pilih Barang')->options(fn (): array => Barang::query()->orderBy('nama_barang')->get()->mapWithKeys(fn (Barang $item): array => [$item->id => "{$item->kode_barang} — {$item->nama_barang}"])->all())
                             ->searchable()->preload()->live()->afterStateUpdated(function ($state, Set $set): void {
@@ -92,7 +92,7 @@ class SuratJalanForm
                         TextInput::make('satuan')->label('Satuan')->default('Pcs')->required(),
                         TextInput::make('keterangan')->label('Keterangan'),
                     ]),
-            ]),
+            ])->columnSpanFull(),
         ]);
     }
 }

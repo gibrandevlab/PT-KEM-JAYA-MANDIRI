@@ -12,7 +12,7 @@ class PurchaseOrderPrintController
         abort_unless(auth()->user()?->hasAccess('purchase_orders', 'view'), 403);
 
         return view('purchase-orders.print', [
-            'purchaseOrder' => $purchaseOrder->load(['po_items', 'user', 'customer', 'vendor']),
+            'purchaseOrder' => $purchaseOrder->load(['po_items', 'user', 'customer', 'vendor', 'po_customer']),
         ]);
     }
 }

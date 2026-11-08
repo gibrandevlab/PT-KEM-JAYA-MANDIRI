@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\StockGudangs\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -23,11 +24,12 @@ class StockGudangsTable
                 TextColumn::make('tanggal_keluar')->label('Tanggal Keluar')->date('d M Y')->sortable(),
                 TextColumn::make('pic')->label('PIC')->searchable(),
             ])
-            ->recordActions([
+            ->recordActions([ActionGroup::make([
                 DeleteAction::make()->icon('heroicon-o-trash')
                     ->iconButton()
                     ->visible(fn (): bool => auth()->user()?->hasAccess('stock_gudangs', 'delete') ?? false),
             ])
+                    ->icon('heroicon-m-ellipsis-vertical')->iconButton()->tooltip('Aksi')])
             ->toolbarActions([]);
     }
 }

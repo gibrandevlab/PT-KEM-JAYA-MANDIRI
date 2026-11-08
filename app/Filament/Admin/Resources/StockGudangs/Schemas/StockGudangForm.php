@@ -16,7 +16,7 @@ class StockGudangForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Data Stok Gudang')->columns(2)->schema([
+            Section::make('Data Stok Gudang')->columns(['default' => 1, 'md' => 2, 'xl' => 3])->schema([
                 Select::make('barang_id')->label('Barang')->options(fn (): array => Barang::query()->where('stok', '>', 0)->orderBy('nama_barang')->get()
                     ->mapWithKeys(fn (Barang $barang): array => [$barang->id => "{$barang->kode_barang} — {$barang->nama_barang} (Stok: {$barang->stok} {$barang->satuan})"])->all())
                     ->searchable()->preload()->required()->live()->afterStateUpdated(function ($state, Set $set): void {
@@ -36,7 +36,7 @@ class StockGudangForm
                 DatePicker::make('tanggal_keluar')->label('Tanggal Barang Keluar'),
                 TextInput::make('pic')->label('PIC'),
                 Textarea::make('keterangan')->label('Keterangan')->rows(3)->columnSpanFull(),
-            ]),
+            ])->columnSpanFull(),
         ]);
     }
 }

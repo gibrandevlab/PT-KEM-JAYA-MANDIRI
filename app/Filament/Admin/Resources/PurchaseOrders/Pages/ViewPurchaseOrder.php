@@ -18,7 +18,9 @@ class ViewPurchaseOrder extends ViewRecord
     {
         return [
             EditAction::make(),
-            Action::make('print')->label('Cetak PDF')->icon('heroicon-o-printer')->url(fn (PurchaseOrder $record): string => route('purchase-orders.print', $record))->openUrlInNewTab(),
+            Action::make('print')->label('Cetak PDF')->icon('heroicon-o-printer')
+                ->modalHeading('Pratinjau Purchase Order')->modalWidth('7xl')->modalSubmitAction(false)->modalCancelActionLabel('Tutup')
+                ->modalContent(fn (PurchaseOrder $record) => view('filament.admin.print-preview', ['url' => route('purchase-orders.print', $record)])),
             Action::make('ubahStatus')->label('Ubah Status')->icon('heroicon-o-arrow-path')
                 ->visible(fn (): bool => auth()->user()?->role === 'admin' && (auth()->user()?->hasAccess('purchase_orders', 'update') ?? false))
                 ->fillForm(fn (PurchaseOrder $record): array => ['status' => $record->status])
@@ -26,7 +28,8 @@ class ViewPurchaseOrder extends ViewRecord
                 ->action(function (PurchaseOrder $record, array $data): void { PurchaseOrderStatusService::change($record, $data['status']); $this->refreshFormData(['status']); }),
             Action::make('createInvoice')->label('Buat Faktur dari PO')->icon('heroicon-o-receipt-percent')
                 ->visible(fn (PurchaseOrder $record): bool => auth()->user()?->role === 'admin' && in_array($record->status, ['diproses', 'selesai'], true))
-                ->url(fn (PurchaseOrder $record): string => InvoiceResource::getUrl('create', ['from_po' => $record->id])),
+                ->url(fn (PurchaseOrder $record): string => InvoiceResource::getUrl('create', ['from_po' => $record->id]))
+                ->openUrlInNewTab(),
         ];
     }
 }

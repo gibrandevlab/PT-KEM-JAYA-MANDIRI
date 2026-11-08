@@ -15,7 +15,7 @@ class BarangForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Barang')->columns(2)->schema([
+            Section::make('Informasi Barang')->columns(['default' => 1, 'md' => 2, 'xl' => 3])->schema([
                 TextInput::make('kode_barang')->label('Kode Barang')->required()->unique(ignoreRecord: true)->readOnly(fn (?Barang $record): bool => $record === null),
                 TextInput::make('nama_barang')->label('Nama Barang')->required(),
                 Select::make('kategori_id')->label('Kategori')->options(fn (): array => KategoriBarang::query()->orderBy('nama_kategori')->pluck('nama_kategori', 'id')->all())
@@ -27,7 +27,7 @@ class BarangForm
                 TextInput::make('stok')->label('Stok')->numeric()->minValue(0)->required()->default(0),
                 TextInput::make('stok_minimum')->label('Stok Minimum')->numeric()->minValue(0)->required()->default(0),
                 Textarea::make('deskripsi')->label('Deskripsi')->rows(3)->columnSpanFull(),
-            ]),
+            ])->columnSpanFull(),
         ]);
     }
 }

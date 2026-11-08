@@ -15,8 +15,15 @@ use App\Filament\Admin\Resources\TermOfPayments\TermOfPaymentResource;
 use App\Filament\Admin\Resources\Users\UserResource;
 use App\Filament\Admin\Resources\Vendors\VendorResource;
 use App\Filament\Admin\Pages\ReportsPage;
-use Filament\Pages\Dashboard;
+use App\Filament\Admin\Pages\Dashboard;
+use App\Filament\Admin\Pages\ProfilePage;
+use App\Filament\Admin\Widgets\FinancialTrendChart;
+use App\Filament\Admin\Widgets\LatestPenawaransTable;
+use App\Filament\Admin\Widgets\LatestSuratJalansTable;
+use App\Filament\Admin\Widgets\StatsOverview;
+use App\Filament\Admin\Widgets\StockOverview;
 use Filament\Http\Middleware\Authenticate;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -26,6 +33,9 @@ use Filament\Navigation\NavigationItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -41,16 +51,27 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        Table::configureUsing(fn (Table $table): Table => $table->striped());
+        TextColumn::configureUsing(fn (TextColumn $column): TextColumn => $column->toggleable());
+
         return $panel
             ->default()
             ->id('admin')
             ->path('admin')
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->brandName('KJM')
             ->brandLogo(asset('assets/logo.png'))
             ->brandLogoHeight('2.5rem')
+            ->maxContentWidth(Width::Full)
             ->favicon(asset('assets/logo.png'))
             ->font('Inter')
             ->sidebarCollapsibleOnDesktop()
+            ->userMenuItems([
+                'profile' => fn (Action $action): Action => $action
+                    ->label('Profil Saya')
+                    ->url(ProfilePage::getUrl())
+                    ->icon('heroicon-o-user-circle'),
+            ])
             ->colors([
                 'primary' => Color::Orange,
             ])
@@ -62,6 +83,10 @@ class AdminPanelProvider extends PanelProvider
                             ->activeIcon('heroicon-s-home')
                             ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.dashboard'))
                             ->url(fn (): string => Dashboard::getUrl()),
+                        NavigationItem::make('Profil Saya')
+                            ->icon('heroicon-o-user-circle')
+                            ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.profile'))
+                            ->url(fn (): string => ProfilePage::getUrl()),
                     ])
                     ->groups([
                         NavigationGroup::make('Transaksi')
@@ -135,7 +160,7 @@ class AdminPanelProvider extends PanelProvider
                             ]),
                         NavigationGroup::make('Admin')
                             ->items([
-                                NavigationItem::make('Laporan Tahunan')
+                                NavigationItem::make('Laporan')
                                     ->icon('heroicon-o-chart-bar')
                                     ->isActiveWhen(fn (): bool => request()->routeIs('filament.admin.pages.reports'))
                                     ->visible(fn (): bool => auth()->user()?->hasAccess('reports', 'view') ?? false)
@@ -165,11 +190,24 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\Filament\Admin\Widgets')
             ->widgets([
-                //
+                StatsOverview::class,
+                StockOverview::class,
+                FinancialTrendChart::class,
+                LatestPenawaransTable::class,
+                LatestSuratJalansTable::class,
             ])
             ->renderHook(
                 PanelsRenderHook::BODY_END,
                 fn (): HtmlString => new HtmlString(<<<'HTML'
+                    <style>
+                        .barang-picker-options .fi-fo-checkbox-list-option-ctn{min-width:0;border:1px solid rgb(229 231 235 / .9);border-radius:.625rem;background:rgb(249 250 251 / .75);padding:.55rem .7rem;transition:background-color .15s,border-color .15s}
+                        .barang-picker-options .fi-fo-checkbox-list-option-ctn:hover{border-color:rgb(156 163 175);background:rgb(243 244 246)}
+                        .dark .barang-picker-options .fi-fo-checkbox-list-option-ctn{border-color:rgb(55 65 81);background:rgb(17 24 39 / .55)}
+                        .dark .barang-picker-options .fi-fo-checkbox-list-option-ctn:hover{border-color:rgb(107 114 128);background:rgb(31 41 55)}
+                        .barang-picker-options .fi-fo-checkbox-list-option{align-items:flex-start}
+                        .barang-picker-options:focus-visible{outline:2px solid var(--primary-500);outline-offset:2px}
+                        @media(max-width:767px){.barang-picker-options .fi-fo-checkbox-list-option-ctn{padding:.45rem .55rem}}
+                    </style>
                     <script>
                         (() => {
                             const path = window.location.pathname;
@@ -266,11 +304,14 @@ class AdminPanelProvider extends PanelProvider
                             document.addEventListener('click', (event) => {
                                 const link = event.target.closest('a[href]');
                                 if (!link) return;
+                                if (!/\/(create|edit)\/?$/.test(window.location.pathname)) return;
+                                if (!link.closest('.fi-sidebar')) return;
+                                if (link.target === '_blank' || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
                                 const target = new URL(link.href, window.location.href);
-                                if (target.origin === window.location.origin && /^\/admin\/.+\/print\/?$/.test(target.pathname)) {
+                                if (target.origin === window.location.origin && target.pathname.startsWith('/admin/') && !/\/print\/?$/.test(target.pathname) && !link.closest('form')) {
                                     event.preventDefault();
                                     event.stopImmediatePropagation();
-                                    window.open(target.href, 'kjm-print-preview', 'popup=yes,width=1100,height=850,scrollbars=yes,resizable=yes');
+                                    window.open(target.href, '_blank', 'noopener');
                                 }
                             }, true);
                         })();
