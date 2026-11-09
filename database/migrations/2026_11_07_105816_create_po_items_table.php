@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('po_items', function (Blueprint $table) {
             $table->integer('id', true);
-            $table->integer('po_id')->index('po_id');
-            $table->integer('barang_id')->nullable()->index('barang_id');
+            $table->integer('po_id')->index();
+            $table->integer('barang_id')->nullable()->index();
             $table->string('kode_barang', 50)->nullable();
             $table->text('nama_barang')->nullable();
             $table->text('deskripsi')->nullable();

@@ -5,32 +5,12 @@ namespace Tests\Feature;
 use App\Models\User;
 use App\Models\UserAccessOverride;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Schema;
 use Livewire\Livewire;
 use Tests\TestCase;
 
 class ManageUserAccessPageTest extends TestCase
 {
     use RefreshDatabase;
-
-    /**
-     * Skema `users` produksi (db_kem) beda dari migration stub Laravel default
-     * (kolom `name` vs `nama`, plus `username`, `role`, `foto`, `aktif`).
-     * Test memakai DB sqlite in-memory, jadi kolom yang hilang ditambahkan di sini.
-     */
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        Schema::table('users', function ($table): void {
-            $table->string('nama')->nullable();
-            $table->string('username')->nullable();
-            $table->string('role')->default('pekerja');
-            $table->string('foto')->nullable();
-            $table->boolean('aktif')->default(true);
-            $table->dropColumn('name');
-        });
-    }
 
     private function admin(): User
     {

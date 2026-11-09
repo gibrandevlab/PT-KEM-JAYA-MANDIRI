@@ -17,10 +17,10 @@ return new class extends Migration
             $table->string('no_po_customer', 100)->nullable();
             $table->enum('jenis', ['dari_customer', 'ke_vendor'])->comment('PO dari Customer ke KJM atau PO dari KJM ke Vendor');
             $table->date('tanggal');
-            $table->integer('penawaran_id')->nullable()->index('penawaran_id')->comment('Referensi ke penawaran (untuk PO dari customer)');
-            $table->integer('customer_id')->nullable()->index('customer_id');
-            $table->integer('po_customer_id')->nullable()->index('fk_po_customer_id');
-            $table->integer('vendor_id')->nullable()->index('vendor_id');
+            $table->integer('penawaran_id')->nullable()->index()->comment('Referensi ke penawaran (untuk PO dari customer)');
+            $table->integer('customer_id')->nullable()->index();
+            $table->integer('po_customer_id')->nullable()->index();
+            $table->integer('vendor_id')->nullable()->index();
             $table->string('nama_perusahaan', 150);
             $table->string('term_of_delivery')->nullable();
             $table->string('delivery_time')->nullable();
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->decimal('ppn_nominal', 20)->nullable()->default(0);
             $table->decimal('total', 20)->nullable()->default(0);
             $table->enum('status', ['draft', 'diproses', 'selesai', 'dibatalkan'])->default('draft');
-            $table->integer('created_by')->index('created_by');
+            $table->integer('created_by')->index();
             $table->timestamp('created_at')->nullable()->useCurrent();
             $table->timestamp('updated_at')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->string('kategori_po', 50)->nullable()->default('Dalam Negeri');

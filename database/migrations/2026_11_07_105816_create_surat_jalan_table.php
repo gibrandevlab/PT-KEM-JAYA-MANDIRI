@@ -15,8 +15,8 @@ return new class extends Migration
             $table->integer('id', true);
             $table->string('no_sj', 30)->unique('no_sj');
             $table->date('tanggal');
-            $table->integer('po_id')->nullable()->index('po_id');
-            $table->integer('penawaran_id')->nullable()->index('penawaran_id');
+            $table->integer('po_id')->nullable()->index();
+            $table->integer('penawaran_id')->nullable()->index();
             $table->unsignedBigInteger('customer_id')->nullable();
             $table->string('nama_penerima', 150);
             $table->text('alamat_pengiriman');
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('no_polisi', 20)->nullable();
             $table->text('catatan')->nullable();
             $table->enum('status', ['draft', 'dikirim', 'diterima', 'dikembalikan'])->default('draft');
-            $table->integer('created_by')->index('created_by');
+            $table->integer('created_by')->index();
             $table->timestamp('created_at')->nullable()->useCurrent();
             $table->timestamp('updated_at')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->boolean('is_history')->nullable()->default(false);

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('po_attachments', function (Blueprint $table) {
             $table->integer('id', true);
-            $table->integer('po_id')->index('po_id');
+            $table->integer('po_id')->index();
             $table->string('file_name');
             $table->string('file_path');
             $table->timestamp('uploaded_at')->nullable()->useCurrent();

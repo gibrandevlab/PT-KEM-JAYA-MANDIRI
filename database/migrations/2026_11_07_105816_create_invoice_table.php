@@ -16,9 +16,9 @@ return new class extends Migration
             $table->string('no_invoice', 30)->unique('no_invoice');
             $table->date('tanggal');
             $table->date('jatuh_tempo')->nullable();
-            $table->integer('sj_id')->nullable()->index('sj_id');
-            $table->integer('po_id')->nullable()->index('po_id');
-            $table->integer('penawaran_id')->nullable()->index('penawaran_id');
+            $table->integer('sj_id')->nullable()->index();
+            $table->integer('po_id')->nullable()->index();
+            $table->integer('penawaran_id')->nullable()->index();
             $table->unsignedBigInteger('customer_id')->nullable();
             $table->string('nama_customer', 150);
             $table->text('alamat_customer')->nullable();
@@ -37,7 +37,7 @@ return new class extends Migration
             $table->decimal('dpp_nominal', 15)->default(0);
             $table->decimal('total', 20)->nullable()->default(0);
             $table->enum('status', ['draft', 'terkirim', 'dibayar', 'jatuh_tempo'])->default('draft');
-            $table->integer('created_by')->index('created_by');
+            $table->integer('created_by')->index();
             $table->timestamp('created_at')->nullable()->useCurrent();
             $table->timestamp('updated_at')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->boolean('is_revisi')->nullable()->default(false);

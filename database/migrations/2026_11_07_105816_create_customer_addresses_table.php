@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('customer_addresses', function (Blueprint $table) {
             $table->integer('id', true);
-            $table->integer('customer_id')->index('customer_id');
+            $table->integer('customer_id')->index();
             $table->string('label_alamat', 100);
             $table->text('alamat_lengkap');
             $table->timestamp('created_at')->nullable()->useCurrent();

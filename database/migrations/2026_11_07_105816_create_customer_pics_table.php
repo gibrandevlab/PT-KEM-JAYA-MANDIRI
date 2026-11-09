@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('customer_pics', function (Blueprint $table) {
             $table->integer('id', true);
-            $table->integer('customer_id')->index('customer_id');
+            $table->integer('customer_id')->index();
             $table->string('tipe', 50);
             $table->string('nama', 150);
             $table->string('telepon', 50)->nullable();

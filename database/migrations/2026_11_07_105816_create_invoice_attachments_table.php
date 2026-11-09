@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('invoice_attachments', function (Blueprint $table) {
             $table->integer('id', true);
-            $table->integer('invoice_id')->index('invoice_id');
+            $table->integer('invoice_id')->index();
             $table->string('file_name');
             $table->string('file_path');
             $table->timestamp('created_at')->nullable()->useCurrent();

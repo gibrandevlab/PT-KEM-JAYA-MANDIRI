@@ -15,7 +15,7 @@ return new class extends Migration
             $table->integer('id', true);
             $table->string('no_penawaran', 30)->unique('no_penawaran');
             $table->date('tanggal');
-            $table->integer('customer_id')->nullable()->index('customer_id');
+            $table->integer('customer_id')->nullable()->index();
             $table->string('nama_customer', 150);
             $table->text('alamat_customer')->nullable();
             $table->text('alamat_customer_2')->nullable();
@@ -34,7 +34,7 @@ return new class extends Migration
             $table->decimal('ppn_nominal', 20)->nullable()->default(0);
             $table->decimal('total', 20)->nullable()->default(0);
             $table->enum('status', ['draft', 'terkirim', 'disetujui', 'ditolak', 'expired', 'selesai'])->default('draft');
-            $table->integer('created_by')->index('created_by');
+            $table->integer('created_by')->index();
             $table->timestamp('created_at')->nullable()->useCurrent();
             $table->timestamp('updated_at')->useCurrentOnUpdate()->nullable()->useCurrent();
             $table->string('kode_sdk', 100)->nullable();
