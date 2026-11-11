@@ -89,6 +89,8 @@ class CreateInvoice extends CreateRecord
         $data['diskon_nominal'] = $discount;
         $data['ppn_persen'] = $taxRate;
         $data['ppn_nominal'] = $tax;
+        $data['is_dpp'] = (bool) ($state['is_dpp'] ?? false);
+        $data['dpp_nominal'] = (float) ($state['dpp_nominal'] ?? 0);
         $data['total'] = max(0, $subtotal - $discount + $tax);
         $data['status'] = 'draft';
         $data['created_by'] = Filament::auth()->id();

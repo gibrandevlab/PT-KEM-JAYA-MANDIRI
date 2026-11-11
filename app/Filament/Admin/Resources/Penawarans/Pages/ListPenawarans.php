@@ -28,12 +28,6 @@ class ListPenawarans extends ListRecords
     {
         return PenawaranResource::getEloquentQuery()
             ->with('user')
-            ->where('is_history', false)
-            ->where('status', '!=', 'selesai');
-    }
-
-    public function updatedTableSearch(): void
-    {
-        $this->resetTablePage();
+            ->where('is_history', false);
     }
 }

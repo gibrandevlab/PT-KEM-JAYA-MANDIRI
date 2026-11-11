@@ -30,7 +30,7 @@ class CustomerInventorySync
 
         $customer->customer_addresses()->delete();
         foreach ([['Alamat Perusahaan', 'customer_addresses_form'], ['Gudang', 'warehouse_addresses_form']] as [$prefix, $key]) {
-            foreach ($state[$key] ?? [] as $index => $address) {
+            foreach (array_values($state[$key] ?? []) as $index => $address) {
                 if (filled($address['alamat_lengkap'] ?? null)) $customer->customer_addresses()->create(['label_alamat' => $prefix . ' ' . ($index + 1), 'alamat_lengkap' => $address['alamat_lengkap']]);
             }
         }

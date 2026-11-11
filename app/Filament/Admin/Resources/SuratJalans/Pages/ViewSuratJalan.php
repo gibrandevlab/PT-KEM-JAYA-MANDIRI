@@ -24,8 +24,7 @@ class ViewSuratJalan extends ViewRecord
                 ->visible(fn (SuratJalan $record): bool => auth()->user()?->role === 'admin' && in_array($record->status, ['dikirim', 'diterima'], true)
                     && (! $record->invoices()->exists()
                         || ($record->invoices()->where('tipe_invoice', 'DP')->exists() && ! $record->invoices()->where('tipe_invoice', 'Pelunasan')->exists())))
-                ->url(fn (SuratJalan $record): string => InvoiceResource::getUrl('create', ['from_sj' => $record->id]))
-                ->openUrlInNewTab(),
+                ->url(fn (SuratJalan $record): string => InvoiceResource::getUrl('create', ['from_sj' => $record->id])),
             Action::make('status')->label('Ubah Status')->icon('heroicon-o-arrow-path')->visible(fn (): bool => auth()->user()?->role === 'admin')
                 ->fillForm(fn (SuratJalan $record): array => ['status' => $record->status])
                 ->form([\Filament\Forms\Components\Select::make('status')->options(['draft' => 'Draft', 'dikirim' => 'Dikirim', 'diterima' => 'Diterima', 'dikembalikan' => 'Dikembalikan'])->required()])

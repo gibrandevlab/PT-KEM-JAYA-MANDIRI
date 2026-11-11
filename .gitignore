@@ -24,6 +24,10 @@
 /public/hot
 /public/js/filament
 /public/storage
+/tests/e2e/.auth/
+/tests/e2e/playwright-report/
+/tests/e2e/test-results/
+/.tmp_*.txt
 /storage/*.key
 /storage/pail
 /vendor

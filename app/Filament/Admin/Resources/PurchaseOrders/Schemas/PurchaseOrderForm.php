@@ -89,7 +89,7 @@ class PurchaseOrderForm
                     ->options(fn (): array => TermOfPayment::query()->orderBy('nama_term')->pluck('nama_term', 'nama_term')->all())->searchable(),
                 Textarea::make('catatan')->label('Catatan Tambahan')->rows(3)->columnSpanFull(),
                 Select::make('penawaran_id')->label('Penawaran Sumber')
-                    ->options(fn (): array => Penawaran::query()->where('status', 'disetujui')->orderByDesc('tanggal')->pluck('no_penawaran', 'id')->all())
+                    ->options(fn (): array => Penawaran::query()->orderByDesc('tanggal')->pluck('no_penawaran', 'id')->all())
                     ->searchable()->preload()->live()->nullable()
                     ->afterStateUpdated(function ($state, Set $set): void {
                         $offer = $state ? Penawaran::query()->with('penawaran_items')->find($state) : null;

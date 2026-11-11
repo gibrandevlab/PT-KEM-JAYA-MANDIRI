@@ -9,6 +9,7 @@ use App\Http\Controllers\ReportExportController;
 use App\Http\Controllers\ReportPrintController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 Route::get('/', function () {
     if (Auth::check()) {
@@ -18,6 +19,15 @@ Route::get('/', function () {
 });
 
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
+Route::get('/profile-photos/{path}', function (string $path) {
+    abort_unless(str_starts_with($path, 'profiles/'), 404);
+    abort_unless(Storage::disk('public')->exists($path), 404);
+
+    return Storage::disk('public')->response($path, null, [
+        'Cache-Control' => 'public, max-age=86400',
+        'X-Content-Type-Options' => 'nosniff',
+    ]);
+})->where('path', '.*')->name('profile-photo.show');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::match(['get', 'post'], '/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/admin/penawarans/{penawaran}/print', PenawaranPrintController::class)

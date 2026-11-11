@@ -49,7 +49,7 @@ class SuratJalanForm
                             'nama_barang' => $item->nama_barang, 'satuan' => $item->satuan, 'qty' => $item->qty,
                         ])->all());
                     }),
-                Select::make('penawaran_id')->label('Referensi Penawaran')->options(fn (): array => Penawaran::query()->whereNotIn('status', ['dibatalkan', 'selesai'])->orderByDesc('created_at')->pluck('no_penawaran', 'id')->all())
+                Select::make('penawaran_id')->label('Referensi Penawaran')->options(fn (): array => Penawaran::query()->orderByDesc('created_at')->pluck('no_penawaran', 'id')->all())
                     ->searchable()->preload()->live()->afterStateUpdated(function ($state, Set $set): void {
                         $offer = $state ? Penawaran::query()->with('penawaran_items')->find($state) : null;
                         if (! $offer) return;

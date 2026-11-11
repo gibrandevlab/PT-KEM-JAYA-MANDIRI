@@ -58,7 +58,6 @@ class CreateSuratJalan extends CreateRecord
     protected function afterCreate(): void
     {
         if ($this->record->po_id) PurchaseOrder::query()->whereKey($this->record->po_id)->update(['status' => 'selesai']);
-        if ($this->record->penawaran_id) Penawaran::query()->whereKey($this->record->penawaran_id)->update(['status' => 'selesai']);
     }
 
     protected function getRedirectUrl(): string

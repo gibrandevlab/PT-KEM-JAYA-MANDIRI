@@ -116,7 +116,7 @@ class User extends Authenticatable implements FilamentUser, HasName, HasAvatar
 		}
 
 		return Storage::disk('public')->exists($this->foto)
-			? Storage::disk('public')->url($this->foto)
+			? route('profile-photo.show', ['path' => $this->foto])
 			: null;
 	}
 

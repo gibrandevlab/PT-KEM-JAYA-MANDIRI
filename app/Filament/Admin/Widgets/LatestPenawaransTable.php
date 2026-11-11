@@ -23,7 +23,6 @@ class LatestPenawaransTable extends BaseWidget
             ->query(
                 Penawaran::query()
                     ->with('user:id,nama')
-                    ->where('status', '!=', 'selesai')
                     ->latest('created_at')
                     ->limit(5)
             )

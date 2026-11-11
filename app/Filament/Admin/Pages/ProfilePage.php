@@ -3,16 +3,18 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Models\User;
-use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Width;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\UploadedFile;
+use Livewire\WithFileUploads;
 
 class ProfilePage extends Page
 {
+    use WithFileUploads;
+
     protected string $view = 'filament.admin.pages.profile';
 
     protected static ?string $slug = 'profile';
@@ -26,6 +28,8 @@ class ProfilePage extends Page
     /** @var array<string, mixed> | null */
     public ?array $data = [];
 
+    public ?UploadedFile $profilePhotoUpload = null;
+
     public static function canAccess(): bool
     {
         return auth()->user() instanceof User;
@@ -36,33 +40,14 @@ class ProfilePage extends Page
         $user = auth()->user();
         abort_unless($user instanceof User, 403);
 
-        $photoPath = $user->foto;
-        if (! is_string($photoPath) || ! Storage::disk('public')->exists($photoPath)) {
-            $photoPath = null;
-        }
-
-        $this->form->fill(['foto' => $photoPath]);
+        $this->form->fill([]);
     }
 
     public function form(Schema $schema): Schema
     {
         return $schema
             ->statePath('data')
-            ->components([
-                Section::make('Foto Profil')
-                    ->description('Pilih foto profil. Format JPG, PNG, atau WEBP dengan ukuran maksimal 1 MB.')
-                    ->schema([
-                        FileUpload::make('foto')
-                            ->hiddenLabel()
-                            ->image()
-                            ->disk('public')
-                            ->directory('profiles')
-                            ->visibility('public')
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
-                            ->maxSize(1024)
-                            ->helperText('Maksimal 1 MB.'),
-                    ]),
-            ]);
+            ->components([]);
     }
 
     public function save(): void
@@ -70,25 +55,56 @@ class ProfilePage extends Page
         $user = auth()->user();
         abort_unless($user instanceof User, 403);
 
-        $data = $this->form->getState();
         $oldPhoto = $user->foto;
-        $newPhoto = $data['foto'] ?? null;
+        $newPhoto = $oldPhoto;
 
-        if ($newPhoto === null && (! is_string($oldPhoto) || ! str_starts_with($oldPhoto, 'profiles/'))) {
-            $newPhoto = $oldPhoto;
+        if ($this->profilePhotoUpload instanceof UploadedFile) {
+            $this->validate([
+                'profilePhotoUpload' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:1024'],
+            ]);
+
+            $newPhoto = $this->profilePhotoUpload->storePublicly('profiles', 'public');
+
+            if (! is_string($newPhoto) || ! Storage::disk('public')->exists($newPhoto)) {
+                Notification::make()->danger()->title('Foto gagal disimpan')->body('Silakan coba unggah kembali.')->send();
+
+                return;
+            }
+
+            $user->update(['foto' => $newPhoto]);
+
+            if (is_string($oldPhoto) && $oldPhoto !== $newPhoto && str_starts_with($oldPhoto, 'profiles/')) {
+                Storage::disk('public')->delete($oldPhoto);
+            }
         }
 
-        $user->update(['foto' => $newPhoto]);
-
-        if (is_string($oldPhoto) && $oldPhoto !== $newPhoto && str_starts_with($oldPhoto, 'profiles/')) {
-            Storage::disk('public')->delete($oldPhoto);
-        }
-
-        $this->form->fill(['foto' => $newPhoto]);
+        $this->form->fill([]);
+        $this->profilePhotoUpload = null;
 
         Notification::make()
             ->success()
             ->title('Profil berhasil diperbarui')
+            ->send();
+    }
+
+    public function resetPhoto(): void
+    {
+        $user = auth()->user();
+        abort_unless($user instanceof User, 403);
+
+        $oldPhoto = $user->foto;
+        $user->update(['foto' => null]);
+        $this->profilePhotoUpload = null;
+
+        if (is_string($oldPhoto) && str_starts_with($oldPhoto, 'profiles/')) {
+            Storage::disk('public')->delete($oldPhoto);
+        }
+
+        $this->form->fill([]);
+
+        Notification::make()
+            ->success()
+            ->title('Foto profil direset')
             ->send();
     }
 
