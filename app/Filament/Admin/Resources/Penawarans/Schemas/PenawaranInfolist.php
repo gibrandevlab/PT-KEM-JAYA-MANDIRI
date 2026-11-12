@@ -20,6 +20,7 @@ class PenawaranInfolist
         return $schema->columns(['default' => 1, 'md' => 2, 'xl' => 4])->components([
             // ── Header ringkas ─────────────────────────────────────────────
             Section::make()
+                ->contained()
                 ->columns(['default' => 2, 'md' => 4])
                 ->schema([
                     TextEntry::make('no_penawaran')
@@ -50,6 +51,7 @@ class PenawaranInfolist
 
             // ── Customer ───────────────────────────────────────────────────
             Section::make('Informasi Customer')
+                ->contained()
                 ->description('Data perusahaan dan kontak yang dituju.')
                 ->icon('heroicon-o-building-office-2')
                 ->columns(['default' => 1, 'md' => 2])
@@ -70,6 +72,7 @@ class PenawaranInfolist
 
             // ── Ketentuan ──────────────────────────────────────────────────
             Section::make('Ketentuan Penawaran')
+                ->contained()
                 ->description('Syarat pengiriman, pembayaran, dan catatan.')
                 ->icon('heroicon-o-clipboard-document-check')
                 ->columns(['default' => 1, 'md' => 3])
@@ -86,6 +89,7 @@ class PenawaranInfolist
 
             // ── Rincian barang ─────────────────────────────────────────────
             Section::make('Rincian Barang')
+                ->contained()
                 ->icon('heroicon-o-cube')
                 ->schema([
                     RepeatableEntry::make('penawaran_items')
@@ -104,6 +108,7 @@ class PenawaranInfolist
 
             // ── Ringkasan ──────────────────────────────────────────────────
             Section::make('Ringkasan Biaya')
+                ->contained()
                 ->icon('heroicon-o-calculator')
                 ->columns(['default' => 2, 'md' => 3])
                 ->schema([
@@ -117,6 +122,7 @@ class PenawaranInfolist
 
             // ── Audit ──────────────────────────────────────────────────────
             Section::make('Informasi Sistem')
+                ->contained()
                 ->icon('heroicon-o-information-circle')
                 ->collapsible()
                 ->collapsed()
@@ -129,6 +135,7 @@ class PenawaranInfolist
 
             // ── Dokumen terkait ────────────────────────────────────────────
             Section::make('Riwayat & Dokumen Terkait')
+                ->contained()
                 ->icon('heroicon-o-link')
                 ->columns(['default' => 1, 'md' => 2])
                 ->schema([
@@ -149,6 +156,7 @@ class PenawaranInfolist
 
             // ── Lampiran ───────────────────────────────────────────────────
             Section::make('Lampiran')
+                ->contained()
                 ->icon('heroicon-o-paper-clip')
                 ->schema([
                     RepeatableEntry::make('penawaran_attachments')->label('')

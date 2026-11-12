@@ -16,7 +16,7 @@ class PurchaseOrderInfolist
     public static function configure(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Informasi Purchase Order')->columns(2)->schema([
+            Section::make('Informasi Purchase Order')->contained()->columns(['default' => 1, 'md' => 2])->schema([
                 TextEntry::make('jenis')->label('Jenis PO')->badge()
                     ->formatStateUsing(fn (?string $state): string => $state === 'dari_customer' ? 'PO Dari Customer' : 'PO Ke Vendor'),
                 TextEntry::make('status')->badge(),
@@ -38,7 +38,7 @@ class PurchaseOrderInfolist
                 TextEntry::make('user.nama')->label('Dibuat oleh')->placeholder('-'),
                 TextEntry::make('catatan')->label('Catatan')->placeholder('-')->columnSpanFull(),
             ])->columnSpanFull(),
-            Section::make('Detail Item')->schema([
+            Section::make('Detail Item')->contained()->schema([
                 RepeatableEntry::make('po_items')->label('')
                     ->schema([
                         TextEntry::make('kode_barang')->label('Kode')->placeholder('-'),
@@ -50,7 +50,7 @@ class PurchaseOrderInfolist
                         TextEntry::make('subtotal')->label('Subtotal')->formatStateUsing(fn ($state, $record): string => ($record->purchase_order?->currency ?: 'Rp') . ' ' . number_format((float) $state, 0, ',', '.')),
                     ])->columns(2),
             ])->columnSpanFull(),
-            Section::make('Ringkasan Harga')->columns(2)->schema([
+            Section::make('Ringkasan Harga')->contained()->columns(['default' => 1, 'sm' => 2])->schema([
                 TextEntry::make('subtotal')->label('Subtotal')->formatStateUsing(fn ($state, PurchaseOrder $record): string => ($record->currency ?: 'Rp') . ' ' . number_format((float) $state, 0, ',', '.')),
                 TextEntry::make('ppn_persen')->label('PPN (%)')->suffix('%')
                     ->visible(fn (PurchaseOrder $record): bool => $record->kategori_po !== 'Luar Negeri' && (float) $record->ppn_persen > 0),
@@ -58,7 +58,7 @@ class PurchaseOrderInfolist
                     ->visible(fn (PurchaseOrder $record): bool => $record->kategori_po !== 'Luar Negeri' && (float) $record->ppn_nominal > 0),
                 TextEntry::make('total')->label('Total')->formatStateUsing(fn ($state, PurchaseOrder $record): string => ($record->currency ?: 'Rp') . ' ' . number_format((float) $state, 0, ',', '.'))->weight('bold'),
             ])->columnSpanFull(),
-            Section::make('Lampiran Dokumen')->schema([
+            Section::make('Lampiran Dokumen')->contained()->schema([
                 RepeatableEntry::make('po_attachments')->label('')
                     ->schema([
                         TextEntry::make('file_name')->label('Nama File')
